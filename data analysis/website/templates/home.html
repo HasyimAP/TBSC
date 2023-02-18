@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}TBSC Analysis{% endblock %}
+
+{% block content %}
+    <div class="align-middle" align="center">
+        <br>
+        <div>
+            <a class="btn btn-primary mt-3 btn-lg" href="{{ url_for('auth.athlete') }}">Input Athlete</a>
+        </div>
+        <br>
+        <div>
+            <a class="btn btn-primary mt-3 btn-lg" href="{{ url_for('auth.record') }}">Input Record</a>
+        </div>
+        <br>
+        <div>
+            <a class="btn btn-primary mt-3 btn-lg">Analysis</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    
+{% endblock %}
+
+{% block title %}Input Record{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('views.home') }}">Back</a>
+    </div>
+</nav>
+
+<form method="POST">
+    <fieldset>
+        <div class="form-group mt-2">
+            <label for="name">Athlete Full Name *</label>
+            <input type="text" class="form-control" id="name" name="name" autocomplete="off" style="text-transform: uppercase;" required>
+        </div>
+        <script type="text/javascript">
+            $( '#name' ).autocomplete({
+                source: JSON.parse('{{names|tojson|safe}}')
+            })
+        </script>
+        <div class="form-group mt-2">
+            <label for="event">Event *</label>
+            <select class="form-select" id="event" name="event" style="text-transform: uppercase;" required>
+                <option>50m Freestyle</option>
+                <option>100m Freestyle</option>
+                <option>200m Freestyle</option>
+                <option>400m Freestyle</option>
+                <option>800m Freestyle</option>
+                <option>1500m Freestyle</option>
+                <option>50m Butterfly</option>
+                <option>100m Butterfly</option>
+                <option>200m Butterfly</option>
+                <option>50m Breaststroke</option>
+                <option>100m Breaststroke</option>
+                <option>200m Breaststroke</option>
+                <option>50m Backstroke</option>
+                <option>100m Backstroke</option>
+                <option>200m Backstroke</option>
+                <option>200m Individual Medley</option>
+                <option>400m Individual Medley</option>
+            </select>
+        </div>
+        <div class="form-group mt-2">
+            <label for="record">Record (mm:ss.ms) *</label>
+            <input type="text" class="form-control" id="record" name="record" pattern="[0-9]{2}:[0-9]{2}.[0-9]{2}" autocomplete="off" required>
+        </div>
+        <div class="form-group mt-2">
+            <label for="date">Date *</label>
+            <input type="date" class="form-control" id="date" name="date" required>
+        </div>
+        <div class="form-group mt-2">
+            <label for="competition">Competition</label>
+            <input type="text" class="form-control" id="competition" name="competition" style="text-transform: uppercase;">
+        </div>
+        <br>
+        <div align="center">
+            <input type="submit" class="btn btn-success mt-1"></input>
+        </div>
+    </fieldset>
+</form>
+{% endblock %}
