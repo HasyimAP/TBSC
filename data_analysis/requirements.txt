@@ -1,8 +1,4 @@
-Flask==2.2.2
-flask_sqlalchemy==3.0.3
-Flask_WTF==1.0.1
 matplotlib==3.6.0
 pandas==1.4.4
 plotly==5.10.0
 streamlit==1.14.0
-WTForms==3.0.1
