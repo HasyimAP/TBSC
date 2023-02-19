@@ -5,13 +5,19 @@ import streamlit as st
 import plotly.express as px
 import matplotlib.pyplot as plt
 
+from PIL import Image
+
 # page settings
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+icon = Image.open(BASE_DIR + '/logo TBSC.jpeg')
+
 st.set_page_config(
+    page_title='TBSC Analysis',
+    page_icon=icon,
     layout='wide'
 )
 
 # get data
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, 'instance/database.db')
 cnx = sqlite3.connect(db_path)
 
