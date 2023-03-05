@@ -24,18 +24,25 @@ cnx = sqlite3.connect(db_path)
 df_athlete = pd.read_sql_query('SELECT * FROM athlete', cnx)
 df_record = pd.read_sql_query("SELECT * FROM record", cnx)
 
+# ============================================= #
+
+'''
+# Overall Progress
+'''
+
 df_progress = df_record.copy()
 df_progress = df_progress.drop('rec_id', axis=1)
 
 time = df_progress['record'].str.split(':', n=1, expand=True)
 df_progress['record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
+df_progress = df_progress.sort_values(['name'])
 
 col_1, col_2 = st.columns([3,1])
 
 with col_1:
     athletes = st.multiselect(
         'Select athlete(s):',
-        options=df_record['name'].unique()
+        options=df_progress['name'].unique()
     )
 
 with col_2:
@@ -74,3 +81,67 @@ fig_progress.update_yaxes(autorange='reversed',
                           )
 
 st.plotly_chart(fig_progress)
+
+# ============================================= #
+# '''
+# ## Event Timeline
+# '''
+
+# competition = df_record['competition'].unique().tolist()
+
+# df_competition = pd.DataFrame({
+#     'content': competition
+# })
+
+# df_competition['start'] = df_competition.apply(lambda x: min_date(df_record), axis=1)
+# df_competition['end'] = df_competition.apply(lambda x: max_date(df_record), axis=1)
+
+# df_competition
+
+# comp_tl = timeline(df_competition.to_json())
+# st.write(comp_tl)
+
+# ============================================= #
+
+# '''
+# ## Individual Performance
+# '''
+
+# individual_records = df_record.copy()
+# individual_records = individual_records.drop('rec_id', axis=1)
+
+# time = individual_records['record'].str.split(':', n=1, expand=True)
+# individual_records['record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
+# individual_records = individual_records.sort_values(['name'])
+
+# athlete = st.selectbox(
+#     'Select athlete:',
+#     options=individual_records['name'].unique()
+# )
+
+# individual_records = individual_records.query(
+#     'name == @athlete'
+# )
+
+# individual_records = individual_records.sort_values(['date'])
+# sorted_record = individual_records['record'].unique().sort()
+
+# fig_ind_records = px.line(individual_records, 
+#                        x='date', 
+#                        y='record (s)', 
+#                        color='event', 
+#                        width=1280, 
+#                        height=480,
+#                        markers=True,
+#                        text='record',
+#                        hover_data=['competition'])
+# fig_ind_records.update_traces(textposition='bottom center')
+# # fig_ind_records.update_layout(hovermode='x unified')
+# y_labels = individual_records['record'].tolist()
+
+# fig_ind_records.update_yaxes(autorange='reversed',
+#                           categoryorder='array',
+#                           categoryarray=y_labels
+#                           )
+
+# st.plotly_chart(fig_ind_records)
