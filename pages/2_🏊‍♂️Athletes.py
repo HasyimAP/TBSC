@@ -12,7 +12,7 @@ st.title('Athletes List')
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,5))).dropna(axis=0, how='all')
-df_records = conn.read(worksheet='Records', usecols=list(range(0,8))).dropna(axis=0, how='all')
+# df_records = conn.read(worksheet='Records', usecols=list(range(0,8)), ttl=5).dropna(axis=0, how='all')
 
 current_year = datetime.date.today().year
 
@@ -37,6 +37,6 @@ def categorize_age(age):
     
 df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
-df_athletes = df_athletes.sort_values(by=['Name'])
+df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
 df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Club', 'Province']]
-st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True)
+st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)

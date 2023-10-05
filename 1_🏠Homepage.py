@@ -9,10 +9,3 @@ st.set_page_config(
 
 st.title('Welcome to TBSC Dashboard')
 
-# conn = st.experimental_connection("gsheets", type=GSheetsConnection)
-
-# data1 = conn.read(worksheet='Athlete')
-# data2 = conn.read(worksheet='Records')
-# st.dataframe(data1)
-# st.dataframe(data2)
-

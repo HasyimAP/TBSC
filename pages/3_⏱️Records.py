@@ -12,7 +12,7 @@ st.title('Athlete Records')
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_records = conn.read(worksheet='Records', usecols=list(range(0,7)), ttl=5).dropna(axis=0, how='all')
 
 athlete = st.selectbox(
     'Choose athlete:',
@@ -23,7 +23,14 @@ df_records = df_records.query(
     'Name == @athlete'
 )
 
-st.dataframe(df_records.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True)
+st.dataframe(
+    df_records.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}),
+    hide_index=True, 
+    use_container_width=True
+)
+
+# Track Records
+st.header('Track Records')
 
 event = st.selectbox(
     'Choose event:',
@@ -43,9 +50,9 @@ sorted_record = df_progress['Record'].unique().sort()
 fig_progress = px.line(df_progress, 
                        x='Date', 
                        y='Record (s)', 
-                       color='Name', 
-                       width=1280, 
-                       height=480,
+                    #    color='Name', 
+                    #    width=1280, 
+                    #    height=480,
                        markers=True,
                        text='Record',
                        hover_data=['Competition'])
@@ -58,4 +65,4 @@ fig_progress.update_yaxes(autorange='reversed',
                           categoryarray=y_labels
                           )
 
-st.plotly_chart(fig_progress)
+st.plotly_chart(fig_progress, use_container_width=True)
