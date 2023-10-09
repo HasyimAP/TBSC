@@ -12,7 +12,7 @@ st.title('Athlete Records')
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7)), ttl=5).dropna(axis=0, how='all')
+df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
 
 athlete = st.selectbox(
     'Choose athlete:',
@@ -21,7 +21,7 @@ athlete = st.selectbox(
 
 df_records = df_records.query(
     'Name == @athlete'
-)
+).sort_values(['Date'], ascending=False)
 
 st.dataframe(
     df_records.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}),
