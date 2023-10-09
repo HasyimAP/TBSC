@@ -11,8 +11,8 @@ st.title('Input Athlete Record')
 
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
-df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6)), ttl=5).dropna(axis=0, how='all')
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7)), ttl=5).dropna(axis=0, how='all')
+df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
+df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
 
 name = st.selectbox(
     'Who are you?',
@@ -76,3 +76,5 @@ if submit_button:
 
     show_update = df_records[df_records['Name'] == name].sort_values('Date', ascending=False)
     st.dataframe(show_update.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True)
+
+    st.cache_data.clear()
