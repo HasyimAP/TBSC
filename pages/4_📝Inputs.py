@@ -67,7 +67,7 @@ if submit_button:
         'Event': event,
         'Record': time,
         'Date': str(date),
-        'Competition': competition
+        'Competition': competition.upper()
     }
 
     df_records = df_records.append(new_record, ignore_index=True)
@@ -75,6 +75,6 @@ if submit_button:
     st.success('Record added 🔥')
 
     show_update = df_records[df_records['Name'] == name].sort_values('Date', ascending=False)
-    st.dataframe(show_update.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True)
+    st.dataframe(show_update.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
 
     st.cache_data.clear()
