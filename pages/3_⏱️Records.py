@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 
+from st_aggrid import AgGrid, GridOptionsBuilder
 from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(
@@ -23,11 +24,14 @@ df_records = df_records.query(
     'Name == @athlete'
 ).sort_values(['Date'], ascending=False)
 
-st.dataframe(
-    df_records.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}),
-    hide_index=True, 
-    use_container_width=True
-)
+# Show the table
+# st.dataframe(
+#     df_records.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}),
+#     hide_index=True, 
+#     use_container_width=True
+# )
+
+AgGrid(df_records)
 
 # Track Records
 st.header('Track Records')
