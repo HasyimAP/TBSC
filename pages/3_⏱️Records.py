@@ -31,7 +31,14 @@ df_records = df_records.query(
 #     use_container_width=True
 # )
 
-AgGrid(df_records)
+gd = GridOptionsBuilder.from_dataframe(df_records)
+gd.configure_default_column(groupable=True)
+
+grid_options = gd.build()
+
+AgGrid(df_records, 
+       gridOptions=grid_options,
+       height=250)
 
 # Track Records
 st.header('Track Records')
