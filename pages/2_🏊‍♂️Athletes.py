@@ -1,6 +1,7 @@
 import datetime
 import streamlit as st
 
+from st_aggrid import AgGrid, GridOptionsBuilder
 from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(
@@ -39,4 +40,16 @@ df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
 df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
 df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Club', 'Province']]
-st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
+# st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
+
+gd = GridOptionsBuilder.from_dataframe(df_athletes)
+# gd.configure_pagination(enabled=True)
+gd.configure_default_column(groupable=True)
+
+grid_options = gd.build()
+
+AgGrid(
+    df_athletes,
+    gridOptions=grid_options,
+    height=400
+)
