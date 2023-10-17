@@ -1,12 +1,38 @@
+import base64
 import datetime
 import streamlit as st
 
+from PIL import Image
+from pathlib import Path
 from st_aggrid import AgGrid, GridOptionsBuilder
 from streamlit_gsheets import GSheetsConnection
 
+BASE_DIR = Path(__file__).parent.parent
+icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
+
 st.set_page_config(
+    page_icon=icon,
     layout='wide'
 )
+
+@st.cache_data
+def get_img_as_base64(file):
+    with open(file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+sidebar_img = get_img_as_base64('images/sidebar.jpg')
+
+page_bg_img = f'''
+<style>
+[data-testid="stSidebar"] {{
+background-image: url("data:image/png;base64,{sidebar_img}");
+background-size: cover;
+}}
+</style>
+'''
+
+st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.title('Athletes List')
 
@@ -40,16 +66,16 @@ df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
 df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
 df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Club', 'Province']]
-# st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
+st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
 
-gd = GridOptionsBuilder.from_dataframe(df_athletes)
+# gd = GridOptionsBuilder.from_dataframe(df_athletes)
 # gd.configure_pagination(enabled=True)
-gd.configure_default_column(groupable=True)
+# gd.configure_default_column(groupable=True)
 
-grid_options = gd.build()
+# grid_options = gd.build()
 
-AgGrid(
-    df_athletes,
-    gridOptions=grid_options,
-    height=400
-)
+# AgGrid(
+#     df_athletes,
+#     gridOptions=grid_options,
+#     height=400
+# )
