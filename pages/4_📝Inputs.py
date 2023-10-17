@@ -45,9 +45,9 @@ file_path = Path(__file__).parent.parent / 'config.yml'
 with file_path.open('rb') as file:
      config = yaml.load(file, Loader=SafeLoader)
 
-authenticator = stauth.Authenticate(config['credentials'],
-                                    config['cookie']['name'], 
-                                    config['cookie']['key'],
+authenticator = stauth.Authenticate(st.secrets['credentials'],
+                                    st.secrets['cookie']['name'], 
+                                    st.secrets['cookie']['key'],
                                     cookie_expiry_days=1)
 
 name, authentication_status, username = authenticator.login('Login', 'main')
