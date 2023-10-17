@@ -1,5 +1,6 @@
 import re
 import yaml
+import tomli
 import base64
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -45,10 +46,13 @@ file_path = Path(__file__).parent.parent / 'config.yml'
 with file_path.open('rb') as file:
      config = yaml.load(file, Loader=SafeLoader)
 
-authenticator = stauth.Authenticate(st.secrets['credentials'],
-                                    st.secrets['cookie']['name'], 
-                                    st.secrets['cookie']['key'],
+creds = dict(st.secrets.credentials)
+
+authenticator = stauth.Authenticate(credentials=creds,
+                                    cookie_name=st.secrets.cookie.name,
+                                    key=st.secrets.cookie.key,
                                     cookie_expiry_days=1)
+
 
 name, authentication_status, username = authenticator.login('Login', 'main')
 
@@ -81,7 +85,7 @@ if authentication_status:
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
 
     name = st.selectbox(
-        'Who are you?',
+        'Athlete name:',
         options=sorted(df_athletes['Name'].unique())
     )
 
@@ -91,7 +95,7 @@ if authentication_status:
     )
 
     time = st.text_input(
-        'Input your time (mn\:sc.ms):'
+        'Input the time (mn\:sc.ms):'
     )
 
     date = st.date_input(
