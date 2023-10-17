@@ -1,16 +1,40 @@
 import re
 import yaml
-import pickle
+import base64
 import streamlit as st
 import streamlit_authenticator as stauth
 
+from PIL import Image
 from pathlib import Path
 from yaml import SafeLoader
 from streamlit_gsheets import GSheetsConnection
 
+BASE_DIR = Path(__file__).parent.parent
+icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
+
 st.set_page_config(
+    page_icon=icon,
     layout='wide'
 )
+
+@st.cache_data
+def get_img_as_base64(file):
+    with open(file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+sidebar_img = get_img_as_base64('images/sidebar.jpg')
+
+page_bg_img = f'''
+<style>
+[data-testid="stSidebar"] {{
+background-image: url("data:image/png;base64,{sidebar_img}");
+background-size: cover;
+}}
+</style>
+'''
+
+st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # --- USER AUTHENTICATION ---
 names = ['Hasyim', 'Kak Gede']
@@ -28,6 +52,7 @@ authenticator = stauth.Authenticate(config['credentials'],
 
 name, authentication_status, username = authenticator.login('Login', 'main')
 
+# --- Necessary Function ---
 def validate_input(input_text):
     pattern = r'\d{2}:\d{2}\.\d{2}$'
     return bool(re.match(pattern, input_text))
@@ -66,7 +91,7 @@ if authentication_status:
     )
 
     time = st.text_input(
-        'Input your time (mm\:ss.ms):'
+        'Input your time (mn\:sc.ms):'
     )
 
     date = st.date_input(
