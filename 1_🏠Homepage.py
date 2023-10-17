@@ -3,8 +3,8 @@ import base64
 import streamlit as st
 
 from PIL import Image
-from pathlib import Path
-from streamlit_gsheets import GSheetsConnection
+# from pathlib import Path
+# from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 icon = Image.open(BASE_DIR + '/images/logo_TBSC.jpeg')
