@@ -1,6 +1,5 @@
 import re
 import yaml
-import tomli
 import base64
 import streamlit as st
 import streamlit_authenticator as stauth
