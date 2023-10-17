@@ -13,6 +13,7 @@ __pycache__/
 # Forbidden files
 forbidden.py
 .streamlit/secrets.toml
+test.py
 
 # Distribution / packaging
 .Python
