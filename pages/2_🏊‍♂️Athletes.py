@@ -1,10 +1,10 @@
 import base64
 import datetime
 import streamlit as st
+import plotly.express as px
 
 from PIL import Image
 from pathlib import Path
-from st_aggrid import AgGrid, GridOptionsBuilder
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
@@ -66,16 +66,20 @@ df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
 df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
 df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Club', 'Province']]
+
+st.write(f"**Total Athletes: {df_athletes['Name'].nunique()}**")
+
 st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
 
-# gd = GridOptionsBuilder.from_dataframe(df_athletes)
-# gd.configure_pagination(enabled=True)
-# gd.configure_default_column(groupable=True)
+col1, col2 = st.columns(2)
 
-# grid_options = gd.build()
+with col1:
+    sex_pie = px.pie(df_athletes, names='Sex', title='Sex Distribution')
 
-# AgGrid(
-#     df_athletes,
-#     gridOptions=grid_options,
-#     height=400
-# )
+    st.plotly_chart(sex_pie, use_container_width=True)
+
+with col2:
+    age_pie = px.pie(df_athletes, names='Age Group', title='Age Group Distribution')
+
+    st.plotly_chart(age_pie, use_container_width=True)
+
