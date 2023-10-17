@@ -4,7 +4,6 @@ import plotly.express as px
 
 from PIL import Image
 from pathlib import Path
-from st_aggrid import AgGrid, GridOptionsBuilder
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
@@ -50,24 +49,31 @@ df_records = df_records.query(
     'Name == @athlete'
 ).sort_values(['Date'], ascending=False)
 
-# Show the table
+# --- DATAFRAME BEST TIME ---
+df_best_time = df_records
+
+time = df_best_time['Record'].str.split(':', n=1, expand=True)
+df_best_time['Record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
+
+idx = df_best_time.groupby('Event')['Record (s)'].idxmin()
+df_best_time = df_best_time.loc[idx]
+df_best_time.reset_index(drop=True, inplace=True)
+df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Date']]
+
+'''
+## Best Times
+'''
+
 st.dataframe(
-    df_records.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}),
+    df_best_time,
     hide_index=True, 
     use_container_width=True
 )
 
-# gd = GridOptionsBuilder.from_dataframe(df_records)
-# gd.configure_default_column(groupable=True)
-
-# grid_options = gd.build()
-
-# AgGrid(df_records, 
-#        gridOptions=grid_options,
-#        height=250)
-
 # Track Records
-st.header('Track Records')
+'''
+## Track Records
+'''
 
 event = st.selectbox(
     'Choose event:',
@@ -86,10 +92,7 @@ sorted_record = df_progress['Record'].unique().sort()
 
 fig_progress = px.line(df_progress, 
                        x='Date', 
-                       y='Record (s)', 
-                    #    color='Name', 
-                    #    width=1280, 
-                    #    height=480,
+                       y='Record (s)',
                        markers=True,
                        text='Record',
                        hover_data=['Competition'])
@@ -103,3 +106,4 @@ fig_progress.update_yaxes(autorange='reversed',
                           )
 
 st.plotly_chart(fig_progress, use_container_width=True)
+
