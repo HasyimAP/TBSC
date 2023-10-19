@@ -7,3 +7,4 @@ PyYAML==6.0.1
 st_gsheets_connection==0.0.3
 streamlit==1.26.0
 streamlit_authenticator==0.2.3
+streamlit_vis_timeline==0.3.0
