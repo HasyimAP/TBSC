@@ -1,11 +1,14 @@
 import base64
 import datetime
+import pandas as pd
 import streamlit as st
 import plotly.express as px
 
 from PIL import Image
 from pathlib import Path
+from datetime import timedelta
 from streamlit_gsheets import GSheetsConnection
+from streamlit_timeline import st_timeline
 
 BASE_DIR = Path(__file__).parent.parent
 icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
@@ -36,13 +39,16 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.title('Athletes List')
 
+# --- Get All Data ---
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,5))).dropna(axis=0, how='all')
+df_competitions = conn.read(worksheet='Competitions').dropna(axis=1, how='all')
 # df_records = conn.read(worksheet='Records', usecols=list(range(0,8)), ttl=5).dropna(axis=0, how='all')
 
 current_year = datetime.date.today().year
 
+# --- Total Current Athletes ---
 df_athletes['Current Age'] = current_year - df_athletes['Year of Birth']
 df_athletes['Current Age'] = df_athletes['Current Age'].astype(int)
 
@@ -71,6 +77,7 @@ st.write(f"**Total Athletes: {df_athletes['Name'].nunique()}**")
 
 st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
 
+# --- Athletes Distribution ---
 col1, col2 = st.columns(2)
 
 with col1:
@@ -83,3 +90,36 @@ with col2:
 
     st.plotly_chart(age_pie, use_container_width=True)
 
+# --- Competition Timeline ---
+df_competitions = df_competitions.dropna(axis=0, how='all')
+
+col_comp1, col_comp2 = st.columns([2, 3])
+
+with col_comp1:
+    st.dataframe(df_competitions.sort_values(by='End Date', ascending=False), hide_index=True)
+
+with col_comp2:
+    today = datetime.date.today()
+
+    timeline = px.timeline(df_competitions.sort_values(by='End Date', ascending=False),
+                           x_start='Start Date',
+                           x_end='End Date',
+                           y='Total Athletes',
+                           color='Competition',
+                           color_discrete_sequence=px.colors.qualitative.Dark24)
+
+    timeline.update_yaxes(categoryorder="total ascending")
+    timeline.update_layout(
+        xaxis_title="Timeline",
+        yaxis_title="Total Athletes",
+        title="Swimming Competition",
+    )
+
+    timeline.update_xaxes(
+    range=[
+        (today - timedelta(days=90)).strftime('%Y-%m-%d'),
+        today.strftime('%Y-%m-%d')
+    ]
+)
+
+    st.plotly_chart(timeline, use_container_width=True)
