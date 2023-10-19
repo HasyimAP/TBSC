@@ -11,7 +11,7 @@ conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
 df_national_records = conn.read(worksheet='National Records', usecols=list(range(0,3))).dropna(axis=0, how='all')
-df_stats = conn.read(worksheet='Statistic', usecols=list(range(0,12))).dropna(axis=0, how='all')
+df_stats = conn.read(worksheet='Statistic', usecols=list(range(0,2))).dropna(axis=0, how='all')
 
 df_stats_copy = df_stats.copy()
 df_stats_copy = df_stats_copy.dropna(axis=1, how='all')
@@ -83,19 +83,51 @@ st.dataframe(df_best_time, use_container_width=True)
 df_speed = df_best_time[df_best_time['Event'] == '100M FREESTYLE']
 df_speed = df_speed[['Name', 'Score']]
 df_speed.reset_index(drop=True, inplace=True)
+df_speed.rename(columns={'Score':'Speed Score'}, inplace=True)
 df_stats_copy = df_stats_copy.merge(df_speed, on='Name', how='left')
-df_stats['Speed Score'] = df_stats_copy['Score'].fillna(0)
+df_stats['Speed Score'] = df_stats_copy['Speed Score'].fillna(0)
 
 # --- Explosive Score ---
 df_explo = df_best_time[df_best_time['Event'] == '50M FREESTYLE']
 df_explo = df_explo[['Name', 'Score']]
-df_explo = df_explo.rename(columns= {'Score':'Explosive Score'})
 df_explo.reset_index(drop=True, inplace=True)
+df_explo.rename(columns={'Score':'Explosive Score'}, inplace=True)
 df_stats_copy = df_stats_copy.merge(df_explo, on='Name', how='left')
 df_stats['Explosive Score'] = df_stats_copy['Explosive Score'].fillna(0)
 
+# --- Versatility Score ---
+df_50free = df_best_time[df_best_time['Event'] == '50M FREESTYLE'][['Name', 'Score']]
+df_50free.rename(columns={'Score':'50M Free Score'}, inplace=True)
+df_50fly = df_best_time[df_best_time['Event'] == '50M BUTTERFLY'][['Name', 'Score']]
+df_50fly.rename(columns={'Score':'50M Fly Score'}, inplace=True)
+df_50back = df_best_time[df_best_time['Event'] == '50M BACKSTROKE'][['Name', 'Score']]
+df_50back.rename(columns={'Score':'50M Back Score'}, inplace=True)
+df_50breast = df_best_time[df_best_time['Event'] == '50M BREASTSTROKE'][['Name', 'Score']]
+df_50breast.rename(columns={'Score':'50M Breast Score'}, inplace=True)
+df_200im = df_best_time[df_best_time['Event'] == '200M INDIVIDUAL MEDLEY'][['Name', 'Score']]
+df_200im.rename(columns={'Score':'200M IM Score'}, inplace=True)
+df_versatile = df_stats_copy[['Name']].merge(df_50free, on='Name', how='left').fillna(0)
+df_versatile = df_versatile.merge(df_50fly, on='Name', how='left').fillna(0)
+df_versatile = df_versatile.merge(df_50back, on='Name', how='left').fillna(0)
+df_versatile = df_versatile.merge(df_50breast, on='Name', how='left').fillna(0)
+df_versatile = df_versatile.merge(df_200im, on='Name', how='left').fillna(0)
+df_versatile['Versatility Score'] = df_versatile[['50M Free Score',
+                                                  '50M Fly Score',
+                                                  '50M Back Score',
+                                                  '50M Breast Score',
+                                                  '200M IM Score']].mean(axis=1)
+df_stats['Versatility Score'] = df_versatile['Versatility Score']
+
+# --- Overall Stats ---
+df_stats['Overall Score'] = df_stats[['Speed Score',
+                                      'Explosive Score',
+                                      'Versatility Score']].mean(axis=1)
+
+# --- Check New Stats ---
 df_stats['Speed Rank'] = df_stats['Speed Score'].apply(assign_rank)
 df_stats['Explosive Rank'] = df_stats['Explosive Score'].apply(assign_rank)
+df_stats['Versatility Rank'] = df_stats['Versatility Score'].apply(assign_rank)
+df_stats['Overall Rank'] = df_stats['Overall Score'].apply(assign_rank)
 st.dataframe(df_stats)
 
 if st.button('update stats'):
