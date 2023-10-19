@@ -1,8 +1,8 @@
 pandas==1.5.3
-Pillow==9.5.0
+Pillow==10.1.0
 plotly==5.17.0
 PyYAML==6.0.1
 st_gsheets_connection==0.0.3
-streamlit==1.26.0
+streamlit==1.27.2
 streamlit_authenticator==0.2.3
 streamlit_vis_timeline==0.3.0
