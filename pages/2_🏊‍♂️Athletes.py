@@ -42,7 +42,8 @@ st.title('Athletes List')
 # --- Get All Data ---
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
-df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,5))).dropna(axis=0, how='all')
+df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
+df_athletes = df_athletes.dropna(axis=1, how='all')
 df_competitions = conn.read(worksheet='Competitions').dropna(axis=1, how='all')
 # df_records = conn.read(worksheet='Records', usecols=list(range(0,8)), ttl=5).dropna(axis=0, how='all')
 
@@ -71,24 +72,38 @@ def categorize_age(age):
 df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
 df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
-df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Club', 'Province']]
+df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Status', 'Club', 'Province']]
 
 st.write(f"**Total Athletes: {df_athletes['Name'].nunique()}**")
 
-st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
+df_athletes.index = range(1, len(df_athletes) + 1)
+st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), use_container_width=True)
 
 # --- Athletes Distribution ---
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    sex_pie = px.pie(df_athletes, names='Sex', title='Sex Distribution')
+    sex_pie = px.pie(df_athletes, 
+                     names='Sex', 
+                     title='Sex Distribution', 
+                     color_discrete_sequence=px.colors.qualitative.G10)
 
     st.plotly_chart(sex_pie, use_container_width=True)
 
 with col2:
-    age_pie = px.pie(df_athletes, names='Age Group', title='Age Group Distribution')
+    age_pie = px.pie(df_athletes, 
+                     names='Age Group', 
+                     title='Age Group Distribution')
 
     st.plotly_chart(age_pie, use_container_width=True)
+
+with col3:
+    status_pie = px.pie(df_athletes, 
+                        names='Status', 
+                        title='Status Distribution',
+                        color_discrete_sequence=px.colors.qualitative.T10)
+
+    st.plotly_chart(status_pie, use_container_width=True)
 
 # --- Competition Timeline ---
 df_competitions = df_competitions.dropna(axis=0, how='all')
