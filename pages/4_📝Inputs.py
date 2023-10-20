@@ -41,10 +41,6 @@ names = ['Hasyim', 'Kak Gede']
 username = ['hasyim', 'kakde']
 
 # --- Load Hashed Passwords ---
-file_path = Path(__file__).parent.parent / 'config.yml'
-with file_path.open('rb') as file:
-     config = yaml.load(file, Loader=SafeLoader)
-
 creds = dict(st.secrets.credentials)
 
 authenticator = stauth.Authenticate(credentials=creds,
