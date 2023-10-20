@@ -102,10 +102,12 @@ with col2:
     radar_data = {
         'Category': [f'Speed ({df_stats["Speed Rank"][0]})',
                     f'Explosive ({df_stats["Explosive Rank"][0]})',
+                    f'Stamina ({df_stats["Stamina Rank"][0]})',
                     f'Versatility ({df_stats["Versatility Rank"][0]})'],
         'Values': [df_stats["Speed Score"][0],
-                df_stats["Explosive Score"][0],
-                df_stats["Versatility Score"][0]]
+                   df_stats["Explosive Score"][0],
+                   df_stats["Stamina Score"][0],
+                   df_stats["Versatility Score"][0]]
     }
 
     df_radar = pd.DataFrame(radar_data)
