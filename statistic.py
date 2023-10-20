@@ -118,15 +118,24 @@ df_versatile['Versatility Score'] = df_versatile[['50M Free Score',
                                                   '200M IM Score']].mean(axis=1)
 df_stats['Versatility Score'] = df_versatile['Versatility Score']
 
+# --- Stamina Score ---
+df_stamina = df_best_time[df_best_time['Event'] == '400M FREESTYLE'][['Name', 'Score']]
+df_stamina.reset_index(drop=True, inplace=True)
+df_stamina.rename(columns={'Score':'Stamina Score'}, inplace=True)
+df_stats_copy = df_stats_copy.merge(df_stamina, on='Name', how='left')
+df_stats['Stamina Score'] = df_stats_copy['Stamina Score'].fillna(0)
+
 # --- Overall Stats ---
 df_stats['Overall Score'] = df_stats[['Speed Score',
                                       'Explosive Score',
-                                      'Versatility Score']].mean(axis=1)
+                                      'Versatility Score',
+                                      'Stamina Score']].mean(axis=1)
 
 # --- Check New Stats ---
 df_stats['Speed Rank'] = df_stats['Speed Score'].apply(assign_rank)
 df_stats['Explosive Rank'] = df_stats['Explosive Score'].apply(assign_rank)
 df_stats['Versatility Rank'] = df_stats['Versatility Score'].apply(assign_rank)
+df_stats['Stamina Rank'] = df_stats['Stamina Score'].apply(assign_rank)
 df_stats['Overall Rank'] = df_stats['Overall Score'].apply(assign_rank)
 st.dataframe(df_stats)
 
