@@ -1,4 +1,4 @@
-import pandas as pd
+import datetime
 import streamlit as st
 
 from streamlit_gsheets import GSheetsConnection
@@ -119,9 +119,16 @@ df_versatile['Versatility Score'] = df_versatile[['50M Free Score',
 df_stats['Versatility Score'] = df_versatile['Versatility Score']
 
 # --- Stamina Score ---
-df_stamina = df_best_time[df_best_time['Event'] == '400M FREESTYLE'][['Name', 'Score']]
-df_stamina.reset_index(drop=True, inplace=True)
-df_stamina.rename(columns={'Score':'Stamina Score'}, inplace=True)
+current_year = datetime.date.today().year
+age_group_3 = current_year - 12
+df_stamina1 = df_best_time[df_best_time['Event'] == '400M FREESTYLE'][df_best_time['Year of Birth'] <= age_group_3][['Name', 'Score']]
+df_stamina1.reset_index(drop=True, inplace=True)
+df_stamina1.rename(columns={'Score':'Stamina Score'}, inplace=True)
+df_stamina2 = df_best_time[df_best_time['Event'] == '200M FREESTYLE'][df_best_time['Year of Birth'] > age_group_3][['Name', 'Score']]
+df_stamina2.reset_index(drop=True, inplace=True)
+df_stamina2.rename(columns={'Score':'Stamina Score'}, inplace=True)
+df_stamina = df_stamina1.append(df_stamina2)
+df_stamina
 df_stats_copy = df_stats_copy.merge(df_stamina, on='Name', how='left')
 df_stats['Stamina Score'] = df_stats_copy['Stamina Score'].fillna(0)
 
