@@ -1,12 +1,10 @@
 import re
-import yaml
 import base64
 import streamlit as st
 import streamlit_authenticator as stauth
 
 from PIL import Image
 from pathlib import Path
-from yaml import SafeLoader
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
@@ -46,7 +44,7 @@ creds = dict(st.secrets.credentials)
 authenticator = stauth.Authenticate(credentials=creds,
                                     cookie_name=st.secrets.cookie.name,
                                     key=st.secrets.cookie.key,
-                                    cookie_expiry_days=1)
+                                    cookie_expiry_days=7)
 
 
 name, authentication_status, username = authenticator.login('Login', 'main')
