@@ -9,12 +9,13 @@ st.set_page_config(
 
 conn = st.experimental_connection("gsheets", type=GSheetsConnection)
 
+df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
+df_athletes = df_athletes.dropna(axis=1, how='all')
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
 df_national_records = conn.read(worksheet='National Records', usecols=list(range(0,3))).dropna(axis=0, how='all')
-df_stats = conn.read(worksheet='Statistic', usecols=list(range(0,2))).dropna(axis=0, how='all')
+df_stats = df_athletes[['Name', 'Sex', 'Year of Birth']].copy()
 
 df_stats_copy = df_stats.copy()
-df_stats_copy = df_stats_copy.dropna(axis=1, how='all')
 
 def assign_rank(score):
     if score > 98.0:
@@ -67,11 +68,14 @@ df_best_time['Record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
 df_best_time = df_best_time.sort_values(by=['Name', 'Event', 'Record (s)'])
 df_best_time = df_best_time.groupby(['Name', 'Event']).first().reset_index()
 
+'''Individual Records'''
 st.dataframe(df_best_time, use_container_width=True)
 
 # --- National Record Time @ Event ---
 time = df_national_records['Time'].str.split(':', n=1, expand=True)
 df_national_records['Time (s)'] = time[0].astype(float)*60 + time[1].astype(float)
+
+'''National Records'''
 st.dataframe(df_national_records, use_container_width=True)
 
 df_best_time = df_best_time.merge(df_national_records, on=['Event', 'Sex'], how='left')
@@ -128,7 +132,6 @@ df_stamina2 = df_best_time[df_best_time['Event'] == '200M FREESTYLE'][df_best_ti
 df_stamina2.reset_index(drop=True, inplace=True)
 df_stamina2.rename(columns={'Score':'Stamina Score'}, inplace=True)
 df_stamina = df_stamina1.append(df_stamina2)
-df_stamina
 df_stats_copy = df_stats_copy.merge(df_stamina, on='Name', how='left')
 df_stats['Stamina Score'] = df_stats_copy['Stamina Score'].fillna(0)
 
@@ -144,7 +147,9 @@ df_stats['Explosive Rank'] = df_stats['Explosive Score'].apply(assign_rank)
 df_stats['Versatility Rank'] = df_stats['Versatility Score'].apply(assign_rank)
 df_stats['Stamina Rank'] = df_stats['Stamina Score'].apply(assign_rank)
 df_stats['Overall Rank'] = df_stats['Overall Score'].apply(assign_rank)
+'''Stats preview'''
 st.dataframe(df_stats)
 
 if st.button('update stats'):
     conn.update(worksheet='Statistic', data=df_stats)
+    st.success('Statistic updated')
