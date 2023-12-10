@@ -131,10 +131,10 @@ with col_comp2:
     )
 
     timeline.update_xaxes(
-    range=[
-        (today - timedelta(days=90)).strftime('%Y-%m-%d'),
-        today.strftime('%Y-%m-%d')
-    ]
-)
+        range=[
+            (today - timedelta(days=90)).strftime('%Y-%m-%d'),
+            today.strftime('%Y-%m-%d')
+        ]
+    )
 
     st.plotly_chart(timeline, use_container_width=True)
