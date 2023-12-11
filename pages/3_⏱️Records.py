@@ -6,6 +6,7 @@ import plotly.express as px
 
 from PIL import Image
 from pathlib import Path
+from statistic import assign_rank
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
@@ -53,8 +54,8 @@ athlete = st.selectbox(
 col1, col2 = st.columns([1,2])
 
 df_stats = df_stats.query(
-        'Name == @athlete'
-    ).reset_index()
+    'Name == @athlete'
+).reset_index()
 
 with col1:
     current_year = datetime.date.today().year
@@ -149,7 +150,7 @@ st.dataframe(
     use_container_width=True
 )
 
-# Track Records
+# --- Track Records ---
 '''
 ## Track Records
 '''
@@ -167,7 +168,6 @@ df_records = df_records.query(
 )
 
 df_progress = df_records.sort_values(['Date'])
-sorted_record = df_progress['Record'].unique().sort()
 
 fig_progress = px.line(df_progress, 
                        x='Date', 
@@ -186,3 +186,101 @@ fig_progress.update_yaxes(autorange='reversed',
 
 st.plotly_chart(fig_progress, use_container_width=True)
 
+# --- Distance Statistic ---
+'''
+## Distance Statistic
+'''
+
+distance1, distance2 = st.columns([1, 2])
+
+with distance1:
+    distance_data = {
+        'Category': [f'50M Free ({df_stats["50M Free Rank"][0]})',
+                    f'100M Free ({df_stats["100M Free Rank"][0]})',
+                    f'200M Free ({df_stats["200M Free Rank"][0]})',
+                    f'400M Free ({df_stats["400M Free Rank"][0]})',
+                    f'800M Free ({df_stats["800M Free Rank"][0]})',
+                    f'1500M Free ({df_stats["1500M Free Rank"][0]})'],
+        'Values': [df_stats['50M Free Score'][0],
+                df_stats['100M Free Score'][0],
+                df_stats['200M Free Score'][0],
+                df_stats['400M Free Score'][0],
+                df_stats['800M Free Score'][0],
+                df_stats['1500M Free Score'][0]]
+    }
+
+    df_distance = pd.DataFrame(distance_data)
+
+    st.dataframe(df_distance.sort_values(['Values'], ascending=False), 
+                 hide_index=True,
+                 use_container_width=True)
+
+with distance2:
+    radar = px.line_polar(df_distance, r='Values', theta='Category', line_close=True)
+    radar.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100])
+        ),
+        polar_angularaxis=dict(
+            tickfont=dict(size=24)  # Adjust the size and weight (bold) of the text
+        ),
+        showlegend=True
+    )
+
+    st.plotly_chart(radar)
+
+# --- Stroke Statistic ---
+'''
+## Stroke Statistic
+'''
+
+stroke1, stroke2 = st.columns([1, 2])
+
+with stroke1:
+    stroke_data1 = {
+        'Category': ['Free',
+                     'Back',
+                     'Fly',
+                     'Breast'],
+        '50M': [df_stats['50M Free Score'][0],
+                   df_stats['50M Back Score'][0],
+                   df_stats['50M Fly Score'][0],
+                   df_stats['50M Breast Score'][0]]
+    }
+
+    stroke_data2 = {
+        'Category': ['Free',
+                     'Back',
+                     'Fly',
+                     'Breast'],
+        '100M': [df_stats['100M Free Score'][0],
+                   df_stats['100M Back Score'][0],
+                   df_stats['100M Fly Score'][0],
+                   df_stats['100M Breast Score'][0]]
+    }
+
+    df_stroke1 = pd.DataFrame(stroke_data1)
+    df_stroke2 = pd.DataFrame(stroke_data2)
+    df_stroke = df_stroke1
+    df_stroke = df_stroke.merge(df_stroke2, on='Category', how='left')
+    df_stroke['Average'] = df_stroke[['50M', '100M']].mean(axis=1)
+    df_stroke['Rank'] = df_stroke['Average'].apply(assign_rank)
+    
+    st.dataframe(df_stroke.sort_values(['Average'], ascending=False), 
+                 hide_index=True,
+                 use_container_width=True)
+
+with stroke2:
+    radar = px.line_polar(df_stroke, r='Average', theta='Category', line_close=True)
+    # radar = radar.add_trace(px.line_polar(df_stroke2, r='Values 100M', theta='Category', line_close=True).data[0])
+    radar.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100])
+        ),
+        polar_angularaxis=dict(
+            tickfont=dict(size=24)  # Adjust the size and weight (bold) of the text
+        ),
+        showlegend=True
+    )
+
+    st.plotly_chart(radar)
