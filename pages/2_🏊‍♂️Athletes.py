@@ -74,7 +74,19 @@ df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
 df_athletes = df_athletes[['Name', 'Sex', 'Year of Birth', 'Current Age', 'Age Group', 'Status', 'Club', 'Province']]
 
-st.write(f"**Total Athletes: {df_athletes['Name'].nunique()}**")
+total, active, semi_active, inactive = st.columns(4)
+
+with total:
+    st.write(f"**Total Athletes: {df_athletes['Name'].nunique()}**")
+
+with active:
+    st.write(f"*Active: {(df_athletes['Status'] == 'ACTIVE').sum()}*")
+
+with semi_active:
+    st.write(f"*Semi-Active: {(df_athletes['Status'] == 'SEMI-ACTIVE').sum()}*")
+
+with inactive:
+    st.write(f"*Inactive: {(df_athletes['Status'] == 'INACTIVE').sum()}*")
 
 df_athletes.index = range(1, len(df_athletes) + 1)
 st.dataframe(df_athletes.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), use_container_width=True)
