@@ -6,6 +6,7 @@ import plotly.express as px
 
 from PIL import Image
 from pathlib import Path
+from datetime import timedelta
 from statistic import assign_rank
 from streamlit_gsheets import GSheetsConnection
 
@@ -183,6 +184,13 @@ fig_progress.update_yaxes(autorange='reversed',
                           categoryorder='array',
                           categoryarray=y_labels
                           )
+
+fig_progress.update_xaxes(
+    range=[
+        max((datetime.datetime.strptime(df_records['Date'].max(), '%Y-%m-%d') - timedelta(days=367)), (datetime.datetime.strptime(df_records['Date'].min(), '%Y-%m-%d') - timedelta(days=2))),
+        datetime.datetime.strptime(df_records['Date'].max(), '%Y-%m-%d') + timedelta(days=2)
+    ]
+)
 
 st.plotly_chart(fig_progress, use_container_width=True)
 
