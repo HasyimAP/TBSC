@@ -7,8 +7,8 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
+from my_functions import categorize_age
 from streamlit_gsheets import GSheetsConnection
-from streamlit_timeline import st_timeline
 
 BASE_DIR = Path(__file__).parent.parent
 icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
@@ -53,22 +53,6 @@ current_year = datetime.date.today().year
 df_athletes['Current Age'] = current_year - df_athletes['Year of Birth']
 df_athletes['Current Age'] = df_athletes['Current Age'].astype(int)
 
-def categorize_age(age):
-    if age >= 19:
-        return 'Senior'
-    elif age >= 16:
-        return 'AG 1'
-    elif age >= 14:
-        return 'AG 2'
-    elif age >= 12:
-        return 'AG 3'
-    elif age >= 10:
-        return 'AG 4'
-    elif age >= 8:
-        return 'AG 5'
-    else:
-        return 'Beginner'
-    
 df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
 df_athletes = df_athletes.sort_values(by=['Year of Birth', 'Sex'])
