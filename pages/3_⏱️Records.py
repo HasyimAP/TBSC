@@ -7,7 +7,7 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
-from statistic import assign_rank
+from my_functions import assign_rank
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
