@@ -7,7 +7,7 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
-from my_functions import categorize_age
+from utilities import categorize_age
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
@@ -40,7 +40,7 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 st.title('Athletes List')
 
 # --- Get All Data ---
-conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
 df_athletes = df_athletes.dropna(axis=1, how='all')

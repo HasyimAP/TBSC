@@ -1,3 +1,4 @@
+import json
 import re
 import base64
 import streamlit as st
@@ -6,6 +7,11 @@ import streamlit_authenticator as stauth
 from PIL import Image
 from pathlib import Path
 from streamlit_gsheets import GSheetsConnection
+
+from utilities import create_temp_credentials, delete_temp_credentials
+
+
+temp_file, temp_dir = create_temp_credentials()
 
 BASE_DIR = Path(__file__).parent.parent
 icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
@@ -34,20 +40,17 @@ background-size: cover;
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# --- USER AUTHENTICATION ---
-names = ['Hasyim', 'Kak Gede']
-username = ['hasyim', 'kakde']
-
 # --- Load Hashed Passwords ---
-creds = dict(st.secrets.credentials)
+# creds = dict(st.secrets.credentials)
+with open(temp_file) as file:
+    creds = json.load(file)
 
 authenticator = stauth.Authenticate(credentials=creds,
                                     cookie_name=st.secrets.cookie.name,
-                                    key=st.secrets.cookie.key,
+                                    cookie_key=st.secrets.cookie.key,
                                     cookie_expiry_days=7)
 
-
-name, authentication_status, username = authenticator.login('Login', 'main')
+authenticator.login()
 
 # --- Necessary Function ---
 def validate_input(input_text):
@@ -62,17 +65,11 @@ def get_yob(name):
     row = df_athletes[df_athletes['Name'] == name]
     return row.iloc[0]['Year of Birth']
 
-if authentication_status == False:
-     st.error('Username/Password is incorrect')
-
-if authentication_status == None:
-     st.warning('Please enter your username and password')
-    
-if authentication_status:
-    authenticator.logout('Logout', 'main')
+if st.session_state["authentication_status"]:
+    authenticator.logout("Logout", "main")
     st.title('Input Athlete Record')
 
-    conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+    conn = st.connection("gsheets", type=GSheetsConnection)
 
     df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
@@ -129,3 +126,11 @@ if authentication_status:
         st.dataframe(show_update.style.format({'Year of Birth': lambda x : '{:.0f}'.format(x)}), hide_index=True, use_container_width=True)
 
         st.cache_data.clear()
+    
+    delete_temp_credentials(temp_dir)
+
+elif st.session_state["authentication_status"] is False:
+    st.error('Username/password is incorrect')
+
+elif st.session_state["authentication_status"] is None:
+    st.warning('Please enter your username and password')

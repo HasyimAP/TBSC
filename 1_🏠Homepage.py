@@ -33,7 +33,7 @@ background-size: cover;
 background: rgb(0, 0, 0, 0);
 }}
 
-[data-testid="block-container"] {{
+[data-testid="stAppViewBlockContainer"] {{
 background-color: #F0F2F6;
 opacity: 0.7;
 }}
@@ -66,11 +66,22 @@ Whether you're aiming for gold or simply want to enjoy the serenity of Bali's cr
 
 ### What Sets Us Apart:
 
-**- Expert Coaches**: Our dedicated team of coaches brings years of experience and a passion for swimming to every lesson.
+- **Expert Coaches**: Our dedicated team of coaches brings years of experience and a passion for swimming to every lesson.
 
-**- Inclusive Community**: We're more than a club; we're a community. Join a supportive network of fellow swimmers who share your passion.
+- **Inclusive Community**: We're more than a club; we're a community. Join a supportive network of fellow swimmers who share your passion.
 
 ### Discover the Magic of Swimming
 
 At Telaga Biru Swimming Club, we believe that the water holds the power to transform lives. Dive in with us, and let the journey begin. Whether you're an aspiring professional or a beginner taking your first strokes, Telaga Biru Swimming Club is here to make your swimming dreams come true. Join us today, and together, we'll explore the endless possibilities of the deep blue.
+
+### Contact Us
+
+- Instagram: [@telagabiruscbali](https://www.instagram.com/telagabiruscbali?igsh=NWFtMmY5NjdjODg1)
+- Facebook: [Telaga Biru Bali](https://www.facebook.com/telaga.birubali?mibextid=JRoKGi)
+
+Or reach our coaches:
+- **Coach Gede Meiga**: [+62 896-3838-2625](https://wa.me/6289638382625)
+- **Coach Arya**: [+62 821-4507-3356](https://wa.me/6282145073356)
+- **Coach Komang**: [+62 896-0164-6224](https://wa.me/6289601646224)
+
 '''

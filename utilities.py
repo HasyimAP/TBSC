@@ -1,3 +1,10 @@
+import json
+import os
+import shutil
+import streamlit as st
+import tempfile
+
+
 def assign_rank(score):
     if score > 98.0:
         return 'EX'
@@ -56,3 +63,31 @@ def categorize_age(age):
     else:
         return 'Beginner'
 
+def sanitize_creds(creds: dict):
+    sanitized_creds = {}
+    for key, value in creds.items():
+        if isinstance(value, dict):
+            sanitized_creds[key] = sanitize_creds(value)
+        elif isinstance(value, (str, int, float, bool, list)):
+            sanitized_creds[key] = value
+        else:
+            sanitized_creds[key] = dict(value)  # Convert non-serializable values to strings
+    return sanitized_creds
+
+def create_temp_credentials():
+    temp_dir = tempfile.mkdtemp()
+    temp_file = os.path.join(temp_dir, 'temp_creds.json')
+    
+    creds = dict(st.secrets["credentials"])
+    creds['usernames'] = creds['usernames'].to_dict()
+    print(creds)
+    print('====')
+    # sanitized_creds = sanitize_creds(creds)
+
+    with open(temp_file, 'w') as file:
+        json.dump(creds, file)
+        
+    return temp_file, temp_dir
+
+def delete_temp_credentials(temp_dir):
+    shutil.rmtree(temp_dir)

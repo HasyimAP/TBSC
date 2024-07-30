@@ -14,6 +14,7 @@ __pycache__/
 forbidden.py
 .streamlit/secrets.toml
 test.py
+.vscode
 
 # Distribution / packaging
 .Python

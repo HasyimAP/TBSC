@@ -7,7 +7,7 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
-from my_functions import assign_rank
+from utilities import assign_rank
 from streamlit_gsheets import GSheetsConnection
 
 BASE_DIR = Path(__file__).parent.parent
@@ -39,7 +39,7 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.title('Athlete Records')
 
-conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
