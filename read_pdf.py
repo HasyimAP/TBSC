@@ -1,7 +1,8 @@
-import fitz
+from datetime import datetime
+from typing import Optional
+import pandas as pd
 import PyPDF2
 import re
-import pandas as pd
 import streamlit as st
 
 from streamlit_gsheets import GSheetsConnection
@@ -56,16 +57,17 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
     data = []
 
     if ind:
-        event_regex = r'\b\d{2,4}\sM\sGAYA\s[A-Z-]+\b'
+        event_regex = r'\b\d{2,4}\s?M\sGAYA\s[A-Z-]+\b'
     else:
-        event_regex = r'\b\d{2,4}\sM\s[A-Z-]+\b'
+        event_regex = r'\b\d{2,4}\s?M\s[A-Z-]+\b'
     event = ''
     
     event_ind_to_eng = {
+        'GAYA KUPU-KUPU': 'BUTTERFLY',
         'GAYA BEBAS': 'FREESTYLE',
         'GAYA DADA': 'BREASTSTROKE',
         'GAYA GANTI': 'INDIVIDUAL MEDLEY',
-        'GAYA KUPU-KUPU': 'BUTTERFLY',
+        'GAYA KUPU': 'BUTTERFLY',
         'GAYA PUNGGUNG': 'BACKSTROKE'
     }
 
@@ -103,6 +105,28 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
 
     return df
 
+def convert_to_date(date_str):
+    month_mapping = {
+        'JANUARI': '01',
+        'FEBRUARI': '02',
+        'MARET': '03',
+        'APRIL': '04',
+        'MEI': '05',
+        'JUNI': '06',
+        'JULI': '07',
+        'AGUSTUS': '08',
+        'SEPTEMBER': '09',
+        'OKTOBER': '10',
+        'NOVEMBER': '11',
+        'DESEMBER': '12'
+    }
+    
+    for indonesian_month, month_num in month_mapping.items():
+        if indonesian_month in date_str:
+            date_str = date_str.replace(indonesian_month, month_num)
+            return datetime.strptime(date_str, '%d %m %Y')
+    return date_str  # Return NaT if no match found
+
 
 if __name__ == '__main__':
     
@@ -110,9 +134,6 @@ if __name__ == '__main__':
     txt_path = 'output.txt'
 
     conn = st.connection("gsheets", type=GSheetsConnection)
-
-    # Open the PDF document
-    pdf_document = fitz.open(pdf_path)
 
     # Open the PDF document
     with open(pdf_path, 'rb') as pdf_file, open(txt_path, 'w', encoding='utf-8') as txt_file:
@@ -129,7 +150,20 @@ if __name__ == '__main__':
     refine_text_file(txt_path, txt_path)
 
     clean_data = process_txt_file(txt_path, 'PORJAR BALI 2024', ind=True)
+    
     athletes = conn.read(worksheet='Athlete')
     clean_data = pd.merge(clean_data, athletes[['Name', 'Sex', 'Year of Birth']], how='left')[['Name', 'Sex', 'Year of Birth', 'Event', 'Record', 'Date', 'Competition']]
     clean_data['Year of Birth'] = clean_data['Year of Birth'].astype(int)
+
+    # clean_data['Date'] = clean_data['Date'].replace('MARET', 'MEI')
+    # clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
+    # clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d %B %Y', utc=False).dt.date
+    # clean_data['Date'] = '2024-06-22'
+    
     print(clean_data)
+
+    exit()
+    df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+    df_records = pd.concat([df_records, clean_data], ignore_index=True).drop_duplicates()
+    
+    conn.update(worksheet='Records', data=df_records)
