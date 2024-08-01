@@ -5,6 +5,6 @@ plotly
 PyPDF2
 PyYAML
 st_gsheets_connection
-streamlit
+streamlit==1.36.0
 streamlit_authenticator
 streamlit_vis_timeline
