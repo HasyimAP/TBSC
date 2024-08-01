@@ -7,11 +7,12 @@ st.set_page_config(
     layout='wide'
 )
 
-conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
 df_athletes = df_athletes.dropna(axis=1, how='all')
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_records = df_records[(df_records['Record'] != 'DQ') & (df_records['Record'] != 'DNS')]
 df_national_records = conn.read(worksheet='National Records', usecols=list(range(0,3))).dropna(axis=0, how='all')
 df_stats = df_athletes[['Name', 'Sex', 'Year of Birth']].copy()
 
