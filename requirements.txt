@@ -1,7 +1,8 @@
-numpy
+numpy==1.26.2
 pandas
 Pillow
 plotly
+PyPDF2
 PyYAML
 st_gsheets_connection
 streamlit
