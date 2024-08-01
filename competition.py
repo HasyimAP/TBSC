@@ -1,8 +1,9 @@
+import pandas as pd
 import streamlit as st
 
 from streamlit_gsheets import GSheetsConnection
 
-conn = st.experimental_connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_competition = conn.read(worksheet='Competitions')
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
@@ -18,7 +19,7 @@ for comp in comp_list:
     end_date.append(df_temp['Date'].max())
     total_athletes.append(df_temp['Name'].nunique())
 
-df_competition = df_competition.head(len(comp_list))
+df_competition = pd.DataFrame()
 
 df_competition['Competition'] = comp_list
 df_competition['Start Date'] = start_date

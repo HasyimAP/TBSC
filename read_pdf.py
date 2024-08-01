@@ -67,6 +67,7 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
         'GAYA BEBAS': 'FREESTYLE',
         'GAYA DADA': 'BREASTSTROKE',
         'GAYA GANTI': 'INDIVIDUAL MEDLEY',
+        'GAYA KUPU KUPU': 'BUTTERFLY',
         'GAYA KUPU': 'BUTTERFLY',
         'GAYA PUNGGUNG': 'BACKSTROKE'
     }
@@ -130,7 +131,7 @@ def convert_to_date(date_str):
 
 if __name__ == '__main__':
     
-    pdf_path = 'full_result/PORJAR BALI 2024.pdf'
+    pdf_path = 'full_result/AMREG FUN 2024.pdf'
     txt_path = 'output.txt'
 
     conn = st.connection("gsheets", type=GSheetsConnection)
@@ -149,7 +150,7 @@ if __name__ == '__main__':
 
     refine_text_file(txt_path, txt_path)
 
-    clean_data = process_txt_file(txt_path, 'PORJAR BALI 2024', ind=True)
+    clean_data = process_txt_file(txt_path, 'AMREG FUN 2024', ind=True)
     
     athletes = conn.read(worksheet='Athlete')
     clean_data = pd.merge(clean_data, athletes[['Name', 'Sex', 'Year of Birth']], how='left')[['Name', 'Sex', 'Year of Birth', 'Event', 'Record', 'Date', 'Competition']]
@@ -158,11 +159,11 @@ if __name__ == '__main__':
     # clean_data['Date'] = clean_data['Date'].replace('MARET', 'MEI')
     # clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
     # clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d %B %Y', utc=False).dt.date
-    # clean_data['Date'] = '2024-06-22'
+    clean_data['Date'] = '2024-06-22'
     
     print(clean_data)
 
-    exit()
+    # exit()
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
     df_records = pd.concat([df_records, clean_data], ignore_index=True).drop_duplicates()
     
