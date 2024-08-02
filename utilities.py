@@ -80,8 +80,6 @@ def create_temp_credentials():
     
     creds = dict(st.secrets["credentials"])
     creds['usernames'] = creds['usernames'].to_dict()
-    print(creds)
-    print('====')
     # sanitized_creds = sanitize_creds(creds)
 
     with open(temp_file, 'w') as file:
