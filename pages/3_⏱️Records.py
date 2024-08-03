@@ -32,6 +32,10 @@ page_bg_img = f'''
 background-image: url("data:image/png;base64,{sidebar_img}");
 background-size: cover;
 }}
+
+[data-testid="stSidebarNavLink"] {{
+background-color: rgba(197, 239, 247, 0.75);
+}}
 </style>
 '''
 
