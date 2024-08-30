@@ -4,6 +4,7 @@ import pandas as pd
 import PyPDF2
 import re
 import streamlit as st
+import pdfplumber
 
 from streamlit_gsheets import GSheetsConnection
 
@@ -72,13 +73,15 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
         'GAYA PUNGGUNG': 'BACKSTROKE'
     }
 
-    date_regex = r'(\d{1,2}\s\w+\s2024)'
+    date_regex = r'(\d{1,2}/08/2024)'
     date = ''
 
     df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
+    df_athletes = df_athletes[df_athletes['Status'] != 'INACTIVE']
     athlete_list = df_athletes['Name'].tolist()
 
     for line in lines:
+        line = line.replace('PT.', 'PUTU ').replace('MD.', 'MADE ')
         match = re.search(event_regex, line)
         if match:
             event = match.group().replace(' M', 'M')
@@ -91,7 +94,13 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
             date = match[-1]
 
         for s in athlete_list:
-            if s.upper() in line.upper():
+            name = s.upper()
+            name_list = name.split(' ')
+            if len(name_list) > 3:
+                name = ' '.join(name_list[:int(len(name_list) * 0.8)])
+            else:
+                name = s.upper()
+            if name in line.upper():
                 record = {
                     'Name': s.upper(),
                     'Event': event,
@@ -131,39 +140,50 @@ def convert_to_date(date_str):
 
 if __name__ == '__main__':
     
-    pdf_path = 'full_result/AMREG FUN 2024.pdf'
+    pdf_path = 'full_result/BBC 2024.pdf'
     txt_path = 'output.txt'
 
     conn = st.connection("gsheets", type=GSheetsConnection)
 
     # Open the PDF document
-    with open(pdf_path, 'rb') as pdf_file, open(txt_path, 'w', encoding='utf-8') as txt_file:
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
 
-        # Iterate through each page
-        for page_num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[page_num]
+    with pdfplumber.open(pdf_path) as pdf, open(txt_path, 'w') as txt_file:
+        for page in pdf.pages:
             text = page.extract_text()  # Extract text from the page
-            lines = text.split('\n')
-            for line in lines:
-                txt_file.write(line + '\n')
+            if text:  # Check if there is any text
+                lines = text.splitlines()  # Split the text into lines
+                for line in lines:
+                    txt_file.write(line + "\n")
 
-    refine_text_file(txt_path, txt_path)
+    # with open(pdf_path, 'rb') as pdf_file, open(txt_path, 'w', encoding='utf-8') as txt_file:
+    #     pdf_reader = PyPDF2.PdfReader(pdf_file)
+        # for page_num in range(len(pdf_reader.pages)):
+        #     page = pdf_reader.pages[page_num]
+        #     text = page.extract_text()  
+        #     txt_file.write(text + '\n')
+            # lines = text.split('\n')
+            # for line in lines:
+            #     txt_file.write(line + '\n')
 
-    clean_data = process_txt_file(txt_path, 'AMREG FUN 2024', ind=True)
+    # refine_text_file(txt_path, txt_path)
+
+    clean_data = process_txt_file(txt_path, 'BBC 2024', ind=True)
     
-    athletes = conn.read(worksheet='Athlete')
-    clean_data = pd.merge(clean_data, athletes[['Name', 'Sex', 'Year of Birth']], how='left')[['Name', 'Sex', 'Year of Birth', 'Event', 'Record', 'Date', 'Competition']]
-    clean_data['Year of Birth'] = clean_data['Year of Birth'].astype(int)
+    athletes = conn.read(worksheet='Athlete').astype(str)
+    athletes = athletes[athletes['Status'] != 'INACTIVE']
+    athletes['Year of Birth'] = athletes['Year of Birth'].astype(float).astype(int)
+    print(athletes)
+    clean_data = pd.merge(clean_data, athletes[['Name', 'Sex', 'Year of Birth']], how='left', on='Name')[['Name', 'Sex', 'Year of Birth', 'Event', 'Record', 'Date', 'Competition']]
+    # clean_data['Year of Birth'] = clean_data['Year of Birth'].astype(float).astype(int)
 
     # clean_data['Date'] = clean_data['Date'].replace('MARET', 'MEI')
     # clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
-    # clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d %B %Y', utc=False).dt.date
-    clean_data['Date'] = '2024-06-22'
+    clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d/%m/%Y', utc=False).dt.date
+    # clean_data['Date'] = '2024-06-22'
     
     print(clean_data)
 
-    # exit()
+    exit()
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
     df_records = pd.concat([df_records, clean_data], ignore_index=True).drop_duplicates()
     
