@@ -47,7 +47,8 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
-df_records = df_records[(df_records['Record'] != 'DQ') & (df_records['Record'] != 'DNS')]
+drop = ['DNS', 'DQ', 'NS', 'NSS']
+df_records = df_records[~df_records['Record'].isin(drop)]
 df_stats = conn.read(worksheet='Statistic').dropna(axis=0, how='all')
 df_stats = df_stats.dropna(axis=1, how='all')
 
