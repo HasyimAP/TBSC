@@ -117,7 +117,7 @@ with col1:
 
     Improvement:
 
-        2%
+        2 %
     '''
 
 with col2:
@@ -139,16 +139,16 @@ pace_chart = pd.DataFrame(columns=[event])
 pace_chart[event] = [f'{x}%' for x in range(100, 59, -5)]
 pace_chart['Personal best (s)'] = pace_chart[event].apply(lambda x: round(best_time + best_time*(1-((float(x.strip('%'))/100))), 2))
 pace_chart['Target time (s)'] = pace_chart[event].apply(lambda x: round(target_time + target_time*(1-((float(x.strip('%'))/100))), 2))
-pace_chart['Diff from PB'] = pace_chart['Personal best (s)'].apply(lambda x: f'+ {round(x - pace_chart[pace_chart[event] == "100%"]['Personal best (s)'].values[0], 2)}')
-pace_chart['Diff from TT'] = pace_chart['Target time (s)'].apply(lambda x: f'+ {round(x - pace_chart[pace_chart[event] == "100%"]['Target time (s)'].values[0], 2)}')
+pace_chart['Diff from PB'] = pace_chart['Personal best (s)'].apply(lambda x: f'+ {round(x - pace_chart[pace_chart[event] == "100%"]["Personal best (s)"].values[0], 2)}')
+pace_chart['Diff from TT'] = pace_chart['Target time (s)'].apply(lambda x: f'+ {round(x - pace_chart[pace_chart[event] == "100%"]["Target time (s)"].values[0], 2)}')
 
 pace_chart['PB min'] = pace_chart['Personal best (s)'] // 60
 pace_chart['PB sec'] = pace_chart['Personal best (s)'] % 60
-pace_chart['Personal best'] = pace_chart['PB min'].apply(lambda x: f'{int(x):02}') + ':' + pace_chart['PB sec'].apply(lambda x: f'{x:05.2f}')
+pace_chart['Personal best'] = pace_chart['PB min'].apply(lambda x: f'{int(x):02}') + ':' + pace_chart["PB sec"].apply(lambda x: f'{x:05.2f}')
 
 pace_chart['TT min'] = pace_chart['Target time (s)'] // 60
 pace_chart['TT sec'] = pace_chart['Target time (s)'] % 60
-pace_chart['Target time'] = pace_chart['TT min'].apply(lambda x: f'{int(x):02}') + ':' + pace_chart['TT sec'].apply(lambda x: f'{x:05.2f}')
+pace_chart['Target time'] = pace_chart['TT min'].apply(lambda x: f'{int(x):02}') + ':' + pace_chart["TT sec"].apply(lambda x: f'{x:05.2f}')
 
 pace_chart = pace_chart[[
     event,
