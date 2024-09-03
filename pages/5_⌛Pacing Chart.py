@@ -203,6 +203,8 @@ st.dataframe(
     hide_index=True
 )
 
+st.header('Download pacing charts')
+
 events = st.multiselect(
     'Choose event(s):',
     options=sorted(df_best_time['Event'].unique()),
