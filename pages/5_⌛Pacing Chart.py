@@ -213,13 +213,17 @@ col3, col4 = st.columns(2)
 
 with col3:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
-        excel_chart = pace_chart.to_excel(temp_file.name, index=False, engine='openpyxl')
+        with pd.ExcelWriter(temp_file.name, engine='openpyxl') as writer:
+            for event in events:
+                pace_chart = get_chart(event)
+                pace_chart.to_excel(writer, sheet_name=event, index=False)
+            
         excel_file_path = temp_file.name
     with open(excel_file_path, 'rb') as file:
         st.download_button(
             label='Download chart as Excel',
             data=file,
-            file_name=f'{athlete} {event}.xlsx',
+            file_name=f'{athlete}.xlsx',
             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
