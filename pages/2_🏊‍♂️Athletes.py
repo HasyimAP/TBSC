@@ -91,11 +91,20 @@ with col1:
     st.plotly_chart(sex_pie, use_container_width=True)
 
 with col2:
-    age_pie = px.pie(df_athletes, 
-                     names='Age Group', 
-                     title='Age Group Distribution')
+    age_count_df = pd.DataFrame()
+    age_count_df['Age Group'] = df_athletes['Age Group'].unique().tolist()
+    age_count_df['Count'] = age_count_df['Age Group'].apply(lambda x: (df_athletes['Age Group'] == x).sum())
+    age_bar = px.bar(
+        age_count_df,
+        x='Age Group',
+        y='Count',
+        title='Age Group Distribution',
+        color='Age Group',
+        color_discrete_sequence=px.colors.qualitative.Set1
+    )
+    age_bar.update_layout(showlegend=False)
 
-    st.plotly_chart(age_pie, use_container_width=True)
+    st.plotly_chart(age_bar, use_container_width=True)
 
 with col3:
     status_pie = px.pie(df_athletes, 
