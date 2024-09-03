@@ -212,20 +212,23 @@ events = st.multiselect(
 col3, col4 = st.columns(2)
 
 with col3:
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
-        with pd.ExcelWriter(temp_file.name, engine='openpyxl') as writer:
-            for event in events:
-                pace_chart = get_chart(event)
-                pace_chart.to_excel(writer, sheet_name=event, index=False)
-            
-        excel_file_path = temp_file.name
-    with open(excel_file_path, 'rb') as file:
-        st.download_button(
-            label='Download chart as Excel',
-            data=file,
-            file_name=f'{athlete}.xlsx',
-            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as temp_file:
+            with pd.ExcelWriter(temp_file.name, engine='openpyxl') as writer:
+                for event in events:
+                    pace_chart = get_chart(event)
+                    pace_chart.to_excel(writer, sheet_name=event, index=False)
+                
+            excel_file_path = temp_file.name
+        with open(excel_file_path, 'rb') as file:
+            st.download_button(
+                label='Download chart as Excel',
+                data=file,
+                file_name=f'{athlete}.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+    except:
+        pass
 
 with col4:
     def create_watermark(pdf: FPDF):
@@ -318,11 +321,14 @@ with col4:
         
         return pdf.output(dest='S').encode('latin1')
     
-    pdf_bytes = df_to_pdf(events)
+    try:
+        pdf_bytes = df_to_pdf(events)
 
-    st.download_button(
-        label="Download chart as PDF",
-        data=pdf_bytes,
-        file_name=f'{athlete}.pdf',
-        mime='application/pdf'
-    )
+        st.download_button(
+            label="Download chart as PDF",
+            data=pdf_bytes,
+            file_name=f'{athlete}.pdf',
+            mime='application/pdf'
+        )
+    except:
+        pass
