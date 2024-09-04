@@ -6,6 +6,7 @@ Pillow
 plotly
 PyPDF2
 PyYAML
+sentry_sdk==2.13.0
 st_gsheets_connection
 streamlit==1.37.0
 streamlit_authenticator
