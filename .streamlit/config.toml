@@ -5,4 +5,4 @@ backgroundColor="#c5eff7"
 textColor="#00080d"
 
 [client]
-showErrorDetails = true
+showErrorDetails = false
