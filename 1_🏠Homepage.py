@@ -87,5 +87,6 @@ Or reach our coaches:
 - **Coach Gede Meiga**: [+62 896-3838-2625](https://wa.me/6289638382625)
 - **Coach Arya**: [+62 821-4507-3356](https://wa.me/6282145073356)
 - **Coach Komang**: [+62 896-0164-6224](https://wa.me/6289601646224)
+- **Coach Hasyim**: [+62 0895-4109-04253](https://wa.me/620895410904253)
 
 '''
