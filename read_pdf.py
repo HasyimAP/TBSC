@@ -73,7 +73,7 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
         'GAYA PUNGGUNG': 'BACKSTROKE'
     }
 
-    date_regex = r'(\d{1,2}/08/2024)'
+    date_regex = r'(\d{1,2}/\d{2}/2024)'
     date = ''
 
     df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
@@ -81,7 +81,7 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
     athlete_list = df_athletes['Name'].tolist()
 
     for line in lines:
-        line = line.replace('PT.', 'PUTU ').replace('MD.', 'MADE ')
+        line = line.replace('PT', 'PUTU').replace('MD', 'MADE')
         match = re.search(event_regex, line)
         if match:
             event = match.group().replace(' M', 'M')
@@ -94,12 +94,13 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
             date = match[-1]
 
         for s in athlete_list:
-            name = s.upper()
+            name = s.strip().upper()
             name_list = name.split(' ')
             if len(name_list) > 3:
                 name = ' '.join(name_list[:int(len(name_list) * 0.8)])
             else:
                 name = s.upper()
+            
             if name in line.upper():
                 record = {
                     'Name': s.upper(),
@@ -137,10 +138,30 @@ def convert_to_date(date_str):
             return datetime.strptime(date_str, '%d %m %Y')
     return date_str  # Return NaT if no match found
 
+def check_total_athletes(input_file: str):
+    athlete = []
+    with open(input_file, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+
+    for line in lines:
+        if 'TELAGA BIRU' in line:
+            split_parts = re.split(r'\d+', line)
+    
+            text_parts = [part.strip() for part in split_parts if part.strip()]
+            name = text_parts[0].replace('PT', 'PUTU').replace('MD', 'MADE').replace('KD', 'KADEK')
+            if 'TEAM' in name:
+                continue
+            if 'TELAGA BIRU' in name:
+                continue
+            athlete.append(name)
+        else:
+            continue
+
+    return set(athlete)
 
 if __name__ == '__main__':
-    
-    pdf_path = 'full_result/BBC 2024.pdf'
+    event = 'AMREG FUN 2024'
+    pdf_path = f'full_result/{event}.pdf'
     txt_path = 'output.txt'
 
     conn = st.connection("gsheets", type=GSheetsConnection)
@@ -167,7 +188,7 @@ if __name__ == '__main__':
 
     # refine_text_file(txt_path, txt_path)
 
-    clean_data = process_txt_file(txt_path, 'BBC 2024', ind=True)
+    clean_data = process_txt_file(txt_path, event, ind=True)
     
     athletes = conn.read(worksheet='Athlete').astype(str)
     athletes = athletes[athletes['Status'] != 'INACTIVE']
@@ -180,8 +201,24 @@ if __name__ == '__main__':
     # clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
     clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d/%m/%Y', utc=False).dt.date
     # clean_data['Date'] = '2024-06-22'
+
+    def format_record(time: str):
+        try:
+            time_list = time.split(':')
+            second = '.'.join([time_list[1], time_list[2]])
+
+            return ':'.join([time_list[0], second])
+        except:
+            return time
+    clean_data['Record'] = clean_data['Record'].apply(format_record)
     
     print(clean_data)
+    print('Total athlete: ', len(clean_data['Name'].unique()))
+    print(sorted(clean_data['Name'].unique().tolist()))
+    listed_athlete = check_total_athletes(txt_path)
+    print('Listed athlete: ', len(listed_athlete))
+    print(sorted(listed_athlete))
+    print('Not listed athlete: ', list(listed_athlete - set(clean_data['Name'].unique().tolist())))
 
     exit()
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
