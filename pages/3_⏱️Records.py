@@ -1,5 +1,6 @@
 import base64
 import datetime
+import sys
 import pandas as pd
 import sentry_sdk
 import streamlit as st
@@ -23,13 +24,16 @@ def exception_handler(e):
     )
     if sentry_sdk.is_initialized():
         st.error(
-            f'Oops, something funny happened. We are looking into it.',
+            f'Oops, something funny happened. We are looking into it. Please contact the admin.',
             icon='🙈',
         )
     else:
         st.write(e)
     
     raise e
+
+error_util = sys.modules['streamlit.error_util']
+error_util.handle_uncaught_app_exception.__code__ = exception_handler.__code__
 
 
 BASE_DIR = Path(__file__).parent.parent

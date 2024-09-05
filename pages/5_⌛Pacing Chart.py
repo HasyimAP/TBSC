@@ -26,7 +26,7 @@ def exception_handler(e):
     )
     if sentry_sdk.is_initialized():
         st.error(
-            f'Oops, something funny happened. We are looking into it.',
+            f'Oops, something funny happened. We are looking into it. Please contact the admin.',
             icon='🙈',
         )
     else:

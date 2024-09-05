@@ -1,6 +1,8 @@
 import base64
 import datetime
+import sys
 import pandas as pd
+import sentry_sdk
 import streamlit as st
 import plotly.express as px
 
@@ -9,6 +11,30 @@ from pathlib import Path
 from datetime import timedelta
 from utilities import categorize_age
 from streamlit_gsheets import GSheetsConnection
+
+
+sentry_sdk.init()
+
+def exception_handler(e):
+    import sentry_sdk  # Needed because this is executed outside the current scope
+    st.image(
+        'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif'
+        'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif',
+        use_column_width=True
+    )
+    if sentry_sdk.is_initialized():
+        st.error(
+            f'Oops, something funny happened. We are looking into it. Please contact the admin.',
+            icon='🙈',
+        )
+    else:
+        st.write(e)
+    
+    raise e
+
+error_util = sys.modules['streamlit.error_util']
+error_util.handle_uncaught_app_exception.__code__ = exception_handler.__code__
+
 
 BASE_DIR = Path(__file__).parent.parent
 icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
