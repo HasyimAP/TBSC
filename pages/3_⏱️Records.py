@@ -24,14 +24,11 @@ def exception_handler(e):
         use_column_width=True
     )
 
-    logging.error(f"An error occurred: {e}", exc_info=True)
-    
     if sentry_sdk.is_initialized():
         st.error(
             f'Oops, something funny happened. We are looking into it. Please contact the admin.',
             icon='🙈',
         )
-        st.error(e)
     else:
         st.write(e)
     
