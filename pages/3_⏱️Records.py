@@ -1,5 +1,6 @@
 import base64
 import datetime
+import logging
 import sys
 import pandas as pd
 import sentry_sdk
@@ -22,6 +23,9 @@ def exception_handler(e):
         'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif',
         use_column_width=True
     )
+
+    logging.error(f"An error occurred: {e}", exc_info=True)
+    
     if sentry_sdk.is_initialized():
         st.error(
             f'Oops, something funny happened. We are looking into it. Please contact the admin.',
