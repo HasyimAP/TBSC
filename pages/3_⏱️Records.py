@@ -31,7 +31,7 @@ def exception_handler(e):
             f'Oops, something funny happened. We are looking into it. Please contact the admin.',
             icon='🙈',
         )
-        st.write(e)
+        st.error(e)
     else:
         st.write(e)
     
