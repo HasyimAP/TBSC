@@ -324,3 +324,35 @@ with stroke2:
     )
 
     st.plotly_chart(radar)
+
+'''
+## Competitions
+'''
+
+df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+
+df_records = df_records.query(
+    'Name == @athlete'
+).sort_values(['Date'], ascending=False)
+
+competition = st.selectbox(
+    'Choose competition:',
+    options=sorted(df_records['Competition'].unique())
+)
+
+df_records = df_records.query(
+    'Competition == @competition'
+)
+
+df_records = df_records.drop(columns=[
+    'Name',
+    'Sex',
+    'Year of Birth',
+    'Competition'
+])
+
+st.dataframe(
+    df_records,
+    hide_index=True, 
+    use_container_width=True
+)
