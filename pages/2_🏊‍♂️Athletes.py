@@ -143,33 +143,29 @@ with col3:
 # --- Competition Timeline ---
 df_competitions = df_competitions.dropna(axis=0, how='all')
 
-col_comp1, col_comp2 = st.columns([2, 3])
+col_comp1, col_comp2 = st.columns([3, 4])
 
 with col_comp1:
     st.dataframe(df_competitions.sort_values(by='End Date', ascending=False), hide_index=True)
 
 with col_comp2:
     today = datetime.date.today()
-
-    timeline = px.timeline(df_competitions.sort_values(by='End Date', ascending=False),
-                           x_start='Start Date',
-                           x_end='End Date',
-                           y='Total Athletes',
-                           color='Competition',
-                           color_discrete_sequence=px.colors.qualitative.Dark24)
-
-    timeline.update_yaxes(categoryorder="total ascending")
-    timeline.update_layout(
-        xaxis_title="Timeline",
-        yaxis_title="Total Athletes",
-        title="Swimming Competition",
+    
+    timeline = px.bar(
+        df_competitions,
+        x='Competition',
+        y='Total Athletes',
+        range_x=[len(df_competitions)-10, len(df_competitions)],
+        # title='Age Group Distribution',
+        color='Competition',
+        color_discrete_sequence=px.colors.qualitative.Dark24
     )
 
-    timeline.update_xaxes(
-        range=[
-            (today - timedelta(days=90)).strftime('%Y-%m-%d'),
-            today.strftime('%Y-%m-%d')
-        ]
+    timeline.update_layout(
+        xaxis_title="Competition",
+        yaxis_title="Total Athletes",
+        title="Swimming Competition",
+        showlegend=False
     )
 
     st.plotly_chart(timeline, use_container_width=True)
