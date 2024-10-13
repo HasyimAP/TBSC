@@ -1,4 +1,5 @@
 from datetime import datetime
+import difflib
 from typing import Optional
 import pandas as pd
 import PyPDF2
@@ -8,6 +9,8 @@ import pdfplumber
 
 from streamlit_gsheets import GSheetsConnection
 
+
+pd.set_option('display.max_columns', None)
 
 def refine_text_file(input_file, output_file):
     # Define patterns for valid line endings
@@ -58,9 +61,9 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
     data = []
 
     if ind:
-        event_regex = r'\b\d{2,4}\s?M\sGAYA\s[A-Z-]+\b'
+        event_regex = r'\d{2,4}\s?M\sGAYA\s?[A-Z -]+\b'
     else:
-        event_regex = r'\b\d{2,4}\s?M\s[A-Z-]+\b'
+        event_regex = r'\d{2,4}\s?M\s?[A-Z -]+\b'
     event = ''
     
     event_ind_to_eng = {
@@ -73,44 +76,64 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
         'GAYA PUNGGUNG': 'BACKSTROKE'
     }
 
-    date_regex = r'(\d{1,2}/\d{2}/2024)'
     date = ''
 
     df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
-    df_athletes = df_athletes[df_athletes['Status'] != 'INACTIVE']
+    df_athletes = df_athletes[~df_athletes['Status'].isin(['INACTIVE', 'TRANSFER'])]
     athlete_list = df_athletes['Name'].tolist()
 
     for line in lines:
-        line = line.replace('PT', 'PUTU').replace('MD', 'MADE')
-        match = re.search(event_regex, line)
-        if match:
-            event = match.group().replace(' M', 'M')
+        if any(word.upper() in line.upper() for word in ['ACARA', 'DICETAK', 'Sponsor', '27 - 29']):
+            continue
+
+        replacements = {
+            # 'PT': 'PUTU',
+            # 'MD': 'MADE',
+            # 'KD': 'KADEK',
+            'ABHIGAMEKA': 'ABHIGAMIKA'
+        }
+
+        for old, new in replacements.items():
+            line = line.replace(old, new)
+        
+        event_match = re.search(event_regex, line)
+        if event_match:
+            event = event_match.group().replace(' M', 'M').replace('PUTRA', '').replace('PUTRI', '')
             if ind:
                 for ind_event, eng_event in event_ind_to_eng.items():
                     event = event.replace(ind_event, eng_event)
         
-        match = re.findall(date_regex, line)
-        if match:
-            date = match[-1]
-
+        date_match = re.search(r'(\d{2}/08/2024)', line)
+        if date_match:
+            date = date_match.group()
+        
         for s in athlete_list:
+            record = {
+                'Name': s.upper(),
+                'Event': event,
+                'Record': format_time(line.split(' ')[-1].strip()),
+                'Date': date,
+                'Competition': competition
+            }
+
             name = s.strip().upper()
-            name_list = name.split(' ')
-            if len(name_list) > 3:
-                name = ' '.join(name_list[:int(len(name_list) * 0.8)])
-            else:
-                name = s.upper()
+            # name_list = name.split(' ')
+            # if len(name_list) > 3:
+            #     name = ' '.join(name_list[:int(len(name_list) * 0.8)])
+            # else:
+            #     name = s.upper()
             
             if name in line.upper():
-                record = {
-                    'Name': s.upper(),
-                    'Event': event,
-                    'Record': format_time(line.split(' ')[-1].strip()),
-                    'Date': date,
-                    'Competition': competition
-                }
-        
                 data.append(record)
+                continue
+                
+            elif 'TELAGA BIRU' in line:
+                split_parts = re.split(r'\d+', line)
+    
+                text_parts = [part.strip() for part in split_parts if part.strip()]
+                if text_parts[0] in s:
+                    data.append(record)
+                    continue
 
     df = pd.DataFrame(data)
 
@@ -132,10 +155,11 @@ def convert_to_date(date_str):
         'DESEMBER': '12'
     }
     
-    for indonesian_month, month_num in month_mapping.items():
-        if indonesian_month in date_str:
-            date_str = date_str.replace(indonesian_month, month_num)
-            return datetime.strptime(date_str, '%d %m %Y')
+    if date_str:
+        for indonesian_month, month_num in month_mapping.items():
+            if indonesian_month in date_str:
+                date_str = date_str.replace(indonesian_month, month_num)
+                return datetime.strptime(date_str, '%d %m %Y')
     return date_str  # Return NaT if no match found
 
 def check_total_athletes(input_file: str):
@@ -145,13 +169,12 @@ def check_total_athletes(input_file: str):
 
     for line in lines:
         if 'TELAGA BIRU' in line:
+
             split_parts = re.split(r'\d+', line)
     
             text_parts = [part.strip() for part in split_parts if part.strip()]
             name = text_parts[0].replace('PT', 'PUTU').replace('MD', 'MADE').replace('KD', 'KADEK')
-            if 'TEAM' in name:
-                continue
-            if 'TELAGA BIRU' in name:
+            if any(keyword in name for keyword in ['TBSC', 'TELAGA BIRU', 'TEAM']):
                 continue
             athlete.append(name)
         else:
@@ -160,7 +183,7 @@ def check_total_athletes(input_file: str):
     return set(athlete)
 
 if __name__ == '__main__':
-    event = 'AMREG FUN 2024'
+    event = 'Amarta Regis Cup 2024'
     pdf_path = f'full_result/{event}.pdf'
     txt_path = 'output.txt'
 
@@ -176,31 +199,23 @@ if __name__ == '__main__':
                 for line in lines:
                     txt_file.write(line + "\n")
 
-    # with open(pdf_path, 'rb') as pdf_file, open(txt_path, 'w', encoding='utf-8') as txt_file:
-    #     pdf_reader = PyPDF2.PdfReader(pdf_file)
-        # for page_num in range(len(pdf_reader.pages)):
-        #     page = pdf_reader.pages[page_num]
-        #     text = page.extract_text()  
-        #     txt_file.write(text + '\n')
-            # lines = text.split('\n')
-            # for line in lines:
-            #     txt_file.write(line + '\n')
-
     # refine_text_file(txt_path, txt_path)
 
     clean_data = process_txt_file(txt_path, event, ind=True)
     
-    athletes = conn.read(worksheet='Athlete').astype(str)
-    athletes = athletes[athletes['Status'] != 'INACTIVE']
-    athletes['Year of Birth'] = athletes['Year of Birth'].astype(float).astype(int)
+    athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all').dropna(axis=1, how='all').astype(str)
+    athletes = athletes[~athletes['Status'].isin(['INACTIVE', 'TRANSFER'])]
     print(athletes)
+    print(athletes['Name'].unique().tolist())
+    athletes['Year of Birth'] = athletes['Year of Birth'].astype(float).astype(int)
     clean_data = pd.merge(clean_data, athletes[['Name', 'Sex', 'Year of Birth']], how='left', on='Name')[['Name', 'Sex', 'Year of Birth', 'Event', 'Record', 'Date', 'Competition']]
+    clean_data = clean_data.drop(index=0)
     # clean_data['Year of Birth'] = clean_data['Year of Birth'].astype(float).astype(int)
 
     # clean_data['Date'] = clean_data['Date'].replace('MARET', 'MEI')
     # clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
-    clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d/%m/%Y', utc=False).dt.date
-    # clean_data['Date'] = '2024-06-22'
+    # clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d/%m/%Y', utc=False).dt.date
+    clean_data['Date'] = '2024-08-24'
 
     def format_record(time: str):
         try:
@@ -216,10 +231,34 @@ if __name__ == '__main__':
     print('Total athlete: ', len(clean_data['Name'].unique()))
     print(sorted(clean_data['Name'].unique().tolist()))
     listed_athlete = check_total_athletes(txt_path)
-    print('Listed athlete: ', len(listed_athlete))
+    print('\nListed athlete: ', len(listed_athlete))
     print(sorted(listed_athlete))
-    print('Not listed athlete: ', list(listed_athlete - set(clean_data['Name'].unique().tolist())))
 
+    not_listed = []
+    for name2 in listed_athlete:
+        listed = False
+        # matches = difflib.get_close_matches(name2, clean_data['Name'].unique().tolist(), n=1, cutoff=0.6)
+        
+        # if matches:
+        #     listed = True
+        
+        if name2 in clean_data['Name'].unique().tolist():
+            listed = True
+
+        if not listed:
+            for name in clean_data['Name'].unique().tolist():
+                if name2 in name:
+                    listed = True
+        
+        if not listed:
+            not_listed.append(name2)
+
+    not_listed = list(set(not_listed))
+
+    print('\nNot listed athlete: ', len(not_listed))
+    print(sorted(not_listed))
+
+    clean_data.to_excel('check_sheets.xlsx', index=False)
     exit()
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
     df_records = pd.concat([df_records, clean_data], ignore_index=True).drop_duplicates()
