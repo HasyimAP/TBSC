@@ -80,9 +80,9 @@ def create_temp_credentials():
     
     creds = dict(st.secrets["credentials"])
     creds['usernames'] = creds['usernames'].to_dict()
-    print(creds)
+    # print(creds)
     for user in creds['usernames']:
-        print(creds['usernames'][user])
+        # print(creds['usernames'][user])
         creds['usernames'][user]['email'] = None
     # sanitized_creds = sanitize_creds(creds)
 
