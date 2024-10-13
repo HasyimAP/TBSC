@@ -2,6 +2,7 @@ import json
 import re
 import base64
 import sys
+import pandas as pd
 import sentry_sdk
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -147,7 +148,7 @@ if st.session_state["authentication_status"]:
             'Competition': competition.upper()
         }
 
-        df_records = df_records.append(new_record, ignore_index=True)
+        df_records = pd.concat([df_records, pd.DataFrame([new_record])], ignore_index=True)
         conn.update(worksheet='Records', data=df_records)
         st.success('Record added 🔥')
 
