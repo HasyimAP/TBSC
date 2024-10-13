@@ -15,6 +15,7 @@ forbidden.py
 .streamlit/secrets.toml
 test.py
 .vscode
+check_sheets.*
 
 # Distribution / packaging
 .Python
