@@ -7,25 +7,10 @@ import streamlit as st
 from pathlib import Path
 from PIL import Image
 
+from utilities import exception_handler
+
 
 sentry_sdk.init()
-
-def exception_handler(e):
-    import sentry_sdk  # Needed because this is executed outside the current scope
-    st.image(
-        'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif'
-        'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif',
-        use_column_width=True
-    )
-    if sentry_sdk.is_initialized():
-        st.error(
-            f'Oops, something funny happened. We are looking into it. Please contact the admin.',
-            icon='🙈',
-        )
-    else:
-        st.write(e)
-    
-    raise e
 
 error_util = sys.modules['streamlit.error_util']
 error_util.handle_uncaught_app_exception.__code__ = exception_handler.__code__
@@ -37,7 +22,7 @@ icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
 st.set_page_config(
     page_title='Full result',
     page_icon=icon,
-    layout='wide'
+    layout='centered'
 )
 
 @st.cache_data
