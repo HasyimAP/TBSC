@@ -4,6 +4,8 @@ import streamlit as st
 
 from streamlit_gsheets import GSheetsConnection
 
+from utilities import assign_rank
+
 st.set_page_config(
     layout='wide'
 )
@@ -20,48 +22,6 @@ df_national_records = conn.read(worksheet='National Records', usecols=list(range
 df_stats = df_athletes[['Name', 'Sex', 'Year of Birth']].copy()
 
 df_stats_copy = df_stats.copy()
-
-def assign_rank(score):
-    if score > 98.0:
-        return 'EX'
-    elif score > 95:
-        return 'S+'
-    elif score > 92.5:
-        return 'S'
-    elif score > 90:
-        return 'S-'
-    elif score > 87:
-        return 'A+'
-    elif score > 83:
-        return 'A'
-    elif score > 80:
-        return 'A-'
-    elif score > 77:
-        return 'B+'
-    elif score > 73:
-        return 'B'
-    elif score > 70:
-        return 'B-'
-    elif score > 67:
-        return 'C+'
-    elif score > 63:
-        return 'C'
-    elif score > 60:
-        return 'C-'
-    elif score > 57:
-        return 'D+'
-    elif score > 53:
-        return 'D'
-    elif score > 50:
-        return 'D-'
-    elif score > 45:
-        return 'E+'
-    elif score > 35:
-        return 'E'
-    elif score > 25:
-        return 'E-'
-    else:
-        return 'F'
 
 # --- Best Time Athletes @ Event ---
 df_best_time = df_records
