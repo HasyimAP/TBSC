@@ -11,27 +11,10 @@ from PIL import Image
 from pathlib import Path
 from streamlit_gsheets import GSheetsConnection
 
-from utilities import create_temp_credentials, delete_temp_credentials
+from utilities import create_temp_credentials, delete_temp_credentials, exception_handler
 
 
 sentry_sdk.init()
-
-def exception_handler(e):
-    import sentry_sdk  # Needed because this is executed outside the current scope
-    st.image(
-        'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif'
-        'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif',
-        use_column_width=True
-    )
-    if sentry_sdk.is_initialized():
-        st.error(
-            f'Oops, something funny happened. We are looking into it. Please contact the admin.',
-            icon='🙈',
-        )
-    else:
-        st.write(e)
-    
-    raise e
 
 error_util = sys.modules['streamlit.error_util']
 error_util.handle_uncaught_app_exception.__code__ = exception_handler.__code__
@@ -139,16 +122,18 @@ if st.session_state["authentication_status"]:
             competition = ''
         
         new_record = {
-            'Name': name,
+            'Name': str(name).strip(),
             'Sex': get_sex(name),
             'Year of Birth': get_yob(name),
-            'Event': event,
-            'Record': time,
-            'Date': str(date),
-            'Competition': competition.upper()
+            'Event': str(event).strip(),
+            'Record': str(time).strip(),
+            'Date': str(date).strip(),
+            'Competition': competition.upper().strip()
         }
 
         df_records = pd.concat([df_records, pd.DataFrame([new_record])], ignore_index=True)
+        df_records = df_records.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
         conn.update(worksheet='Records', data=df_records)
         st.success('Record added 🔥')
 

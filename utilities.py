@@ -93,3 +93,20 @@ def create_temp_credentials():
 
 def delete_temp_credentials(temp_dir):
     shutil.rmtree(temp_dir)
+
+def exception_handler(e):
+    import sentry_sdk  # Needed because this is executed outside the current scope
+    st.image(
+        'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif'
+        'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif',
+        use_column_width=True
+    )
+    if sentry_sdk.is_initialized():
+        st.error(
+            f'Oops, something funny happened. We are looking into it. Please contact the admin.',
+            icon='🙈',
+        )
+    else:
+        st.write(e)
+    
+    raise e
