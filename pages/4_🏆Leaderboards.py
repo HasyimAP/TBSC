@@ -1,12 +1,19 @@
 import datetime
 import base64
+import sys
+import sentry_sdk
 import streamlit as st
 
 from pathlib import Path
 from PIL import Image
 from streamlit_gsheets import GSheetsConnection
 
-from utilities import assign_rank, categorize_age
+from utilities import assign_rank, categorize_age, exception_handler
+
+sentry_sdk.init()
+
+error_util = sys.modules['streamlit.error_util']
+error_util.handle_uncaught_app_exception.__code__ = exception_handler.__code__
 
 BASE_DIR = Path(__file__).parent.parent
 icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
@@ -77,7 +84,7 @@ df_records['Age Group'] = df_records['Current Age'].apply(categorize_age)
 drop = ['DNS', 'DQ', 'NS', 'NSS']
 df_records = df_records[~df_records['Record'].isin(drop)]
 
-include_inactive = st.checkbox('Include Inactive Athletes', value=False)
+include_inactive = st.checkbox('Include Inactive/Transfered Athletes', value=False)
 
 if not include_inactive:
     inactive = ['INACTIVE', 'TRANSFER']
@@ -87,7 +94,7 @@ if not include_inactive:
     df_statistic = df_statistic[df_statistic['Name'].isin(df_athlete['Name'].unique())]
 
 # --- Best Time Athletes @ Event ---
-st.header('General Rankings')
+st.header('Event Rankings')
 
 df_best_time = df_records.copy()
 time = df_best_time['Record'].str.split(':', n=1, expand=True)
@@ -182,7 +189,105 @@ df_statistic['Average Rank'] = df_statistic['Average Score'].apply(assign_rank)
 
 df_statistic = df_statistic.sort_values(by=f'{statistic_group} Score', ascending=False)
 df_statistic = df_statistic.reset_index(drop=True)
+df_statistic['Year of Birth'] = df_statistic['Year of Birth'].astype(str).replace('\.0', '', regex=True)
 df_statistic.index.name = 'Rank'
 df_statistic.index = df_statistic.index + 1
 
 st.dataframe(df_statistic, use_container_width=True)
+
+
+st.header('TBSC Internal Records')
+
+df_internal_records = df_records.copy()
+time = df_internal_records['Record'].str.split(':', n=1, expand=True)
+df_internal_records['Record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
+
+df_internal_records['Record Year'] = df_internal_records['Date'].str.split('-', n=1, expand=True)[0].astype(int)
+df_internal_records['Duration'] = current_year - df_internal_records['Record Year']
+
+df_internal_records['Athlete Age'] = df_internal_records['Record Year'] - df_internal_records['Year of Birth']
+df_internal_records['Athlete Age'] = df_internal_records['Athlete Age'].astype(int)
+df_internal_records['Age Group'] = df_internal_records['Athlete Age'].apply(categorize_age)
+
+df_internal_records = df_internal_records.sort_values(by=['Record (s)'])
+df_internal_records = df_internal_records.groupby(['Event', 'Age Group', 'Sex']).first().reset_index()
+raw_df_internal_records = df_internal_records.copy()
+
+records_columns = st.columns(4)
+
+with records_columns[0]:
+    records_age_group = st.selectbox(
+        'Age Group:',
+        options=['All'] + sorted(df_internal_records['Age Group'].unique()),
+        key='records_age_group'
+    )
+
+if records_age_group != 'All':
+    df_internal_records = df_internal_records.query("`Age Group` == @records_age_group")
+
+with records_columns[1]:
+    records_sex = st.selectbox(
+        'Sex:',
+        options=['All'] + sorted(df_internal_records['Sex'].unique()),
+        key='records_sex'
+    )
+
+if records_sex != 'All':
+    df_internal_records = df_internal_records.query("`Sex` == @records_sex")
+
+with records_columns[2]:
+    records_event = st.selectbox(
+        'Event:',
+        options=['All'] + sorted(df_internal_records['Event'].unique()),
+        key='records_event'
+    )
+
+if records_event != 'All':
+    df_internal_records = df_internal_records.query("`Event` == @records_event")
+
+with records_columns[3]:
+    records_year = st.selectbox(
+        'Year:',
+        options=['All'] + sorted(df_internal_records['Record Year'].unique(), reverse=True),
+        key='records_year'
+    )
+
+if records_year != 'All':
+    df_internal_records = df_internal_records.query("`Record Year` == @records_year")
+
+df_internal_records['Year of Birth'] = df_internal_records['Year of Birth'].astype(str).replace('\.0', '', regex=True)
+df_internal_records['Record Year'] = df_internal_records['Record Year'].astype(str).replace('\.0', '', regex=True)
+
+df_internal_records = df_internal_records[[
+    'Event',
+    'Age Group',
+    'Name',
+    'Sex',
+    'Year of Birth',
+    'Record',
+    'Competition',
+    'Record Year',
+    'Athlete Age',
+    'Duration',
+]].rename(columns={
+    'Age Group': 'AG',
+    'Record Year': 'Year',
+})
+
+st.dataframe(df_internal_records, use_container_width=True, hide_index=True)
+
+st.header('Record Holders Count')
+
+record_holder_counts = raw_df_internal_records.groupby(['Name', 'Age Group']).size().reset_index(name='Count')
+
+# Pivot the dataframe to get age groups as columns
+pivot_df = record_holder_counts.pivot(index='Name', columns='Age Group', values='Count').fillna(0)
+
+# Add a total count column
+pivot_df['Total Count'] = pivot_df.sum(axis=1)
+
+# Reset index to make 'Name' a column again
+pivot_df = pivot_df.reset_index()
+
+# Display the new dataframe
+st.dataframe(pivot_df, use_container_width=True, hide_index=True)
