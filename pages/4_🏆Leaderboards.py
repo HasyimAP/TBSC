@@ -98,7 +98,8 @@ df_best_time = df_best_time.groupby(['Name', 'Event']).first().reset_index()
 
 general_event = st.selectbox(
     'Choose event:',
-    options=sorted(df_best_time['Event'].unique())
+    options=sorted(df_best_time['Event'].unique()),
+    key='general_event'
 )
 
 best_time = df_best_time.query(
@@ -110,7 +111,8 @@ general_input_colunms = st.columns(2)
 with general_input_colunms[0]:
     general_age_group = st.selectbox(
         'Age Group:',
-        options=['All'] + sorted(best_time['Age Group'].unique())
+        options=['All'] + sorted(best_time['Age Group'].unique()),
+        key='general_age_group'
     )
 
 if general_age_group != 'All':
@@ -146,7 +148,8 @@ statistic_input_colunms = st.columns(3)
 with statistic_input_colunms[0]:
     statistic_age_group = st.selectbox(
         'Age Group:',
-        options=['All'] + sorted(df_statistic['Age Group'].unique())
+        options=['All'] + sorted(df_statistic['Age Group'].unique()),
+        key='statistic_age_group'
     )
 
 if statistic_age_group != 'All':
@@ -165,7 +168,8 @@ if statistic_sex != 'All':
 with statistic_input_colunms[2]:
     statistic_group = st.selectbox(
         'Group:',
-        options=['Overall', 'Speed', 'Explosive', 'Versatility', 'Stamina']
+        options=['Overall', 'Speed', 'Explosive', 'Versatility', 'Stamina'],
+        key='statistic_group'
     )
 
 df_statistic = df_statistic[[
