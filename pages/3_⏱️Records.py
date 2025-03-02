@@ -1,6 +1,5 @@
 import base64
 import datetime
-import logging
 import sys
 import pandas as pd
 import sentry_sdk
@@ -10,15 +9,13 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
-from utilities import assign_rank, exception_handler
+from utilities import assign_rank, categorize_age, exception_handler
 from streamlit_gsheets import GSheetsConnection
-
 
 sentry_sdk.init()
 
 error_util = sys.modules['streamlit.error_util']
 error_util.handle_uncaught_app_exception.__code__ = exception_handler.__code__
-
 
 BASE_DIR = Path(__file__).parent.parent
 icon = Image.open(BASE_DIR / 'images/logo_TBSC.jpeg')
@@ -57,10 +54,10 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
 df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_stats = conn.read(worksheet='Statistic').dropna(axis=0, how='all').dropna(axis=1, how='all')
+
 drop = ['DNS', 'DQ', 'NS', 'NSS']
 df_records = df_records[~df_records['Record'].isin(drop)]
-df_stats = conn.read(worksheet='Statistic').dropna(axis=0, how='all')
-df_stats = df_stats.dropna(axis=1, how='all')
 
 athlete = st.selectbox(
     'Choose athlete:',
@@ -70,51 +67,31 @@ athlete = st.selectbox(
 # --- Athlete Statistic ---
 col1, col2 = st.columns([1,2])
 
-df_stats = df_stats.query(
-    'Name == @athlete'
-).reset_index()
+df_stats = df_stats.query('Name == @athlete').reset_index()
 
 with col1:
     current_year = datetime.date.today().year
-
     df_athletes['Current Age'] = current_year - df_athletes['Year of Birth']
     df_athletes['Current Age'] = df_athletes['Current Age'].astype(int)
-
-    def categorize_age(age):
-        if age >= 19:
-            return 'Senior'
-        elif age >= 16:
-            return 'AG 1'
-        elif age >= 14:
-            return 'AG 2'
-        elif age >= 12:
-            return 'AG 3'
-        elif age >= 10:
-            return 'AG 4'
-        elif age >= 8:
-            return 'AG 5'
-        else:
-            return 'Beginner'
-        
     df_athletes['Age Group'] = df_athletes['Current Age'].apply(categorize_age)
 
-    f'''
-    Sex:
-        
-        {df_athletes.loc[df_athletes['Name'] == athlete, 'Sex'].values[0] if athlete in df_athletes['Name'].values else None}
+    athlete_data = f"""
+    **Status:** {df_athletes.loc[df_athletes['Name'] == athlete, 'Status'].values[0] if athlete in df_athletes['Name'].values else None}
 
-    Age Group:
+    **Sex:** {df_athletes.loc[df_athletes['Name'] == athlete, 'Sex'].values[0] if athlete in df_athletes['Name'].values else None}
 
-        {df_athletes.loc[df_athletes['Name'] == athlete, 'Age Group'].values[0] if athlete in df_athletes['Name'].values else None}
+    **Year of Birth:** {str(df_athletes.loc[df_athletes['Name'] == athlete, 'Year of Birth'].values[0]).replace('.0', '') if athlete in df_athletes['Name'].values else None}
 
-    Overall Score:
+    **Current Age:** {df_athletes.loc[df_athletes['Name'] == athlete, 'Current Age'].values[0] if athlete in df_athletes['Name'].values else None}
 
-        {round(df_stats['Overall Score'][0], 2)}
-    
-    Overall Rank:
+    **Age Group:** {df_athletes.loc[df_athletes['Name'] == athlete, 'Age Group'].values[0] if athlete in df_athletes['Name'].values else None}
 
-        {df_stats['Overall Rank'][0]}
-    '''
+    **Overall Score:** {round(df_stats['Overall Score'][0], 2)}
+
+    **Overall Rank:** {df_stats['Overall Rank'][0]}
+    """
+
+    st.markdown(athlete_data)
 
 with col2:
     radar_data = {
@@ -135,7 +112,7 @@ with col2:
             radialaxis=dict(visible=True, range=[0, 100])
         ),
         polar_angularaxis=dict(
-            tickfont=dict(size=24)  # Adjust the size and weight (bold) of the text
+            tickfont=dict(size=24)
         ),
         showlegend=True
     )
@@ -143,10 +120,7 @@ with col2:
     st.plotly_chart(radar)
 
 # --- DATAFRAME BEST TIME ---
-df_records = df_records.query(
-    'Name == @athlete'
-).sort_values(['Date'], ascending=False)
-
+df_records = df_records.query('Name == @athlete').sort_values(['Date'], ascending=False)
 df_best_time = df_records
 
 time = df_best_time['Record'].str.split(':', n=1, expand=True)
@@ -157,20 +131,11 @@ df_best_time = df_best_time.loc[idx]
 df_best_time.reset_index(drop=True, inplace=True)
 df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Date']]
 
-'''
-## Best Times
-'''
-
-st.dataframe(
-    df_best_time,
-    hide_index=True, 
-    use_container_width=True
-)
+st.markdown("## Best Times")
+st.dataframe(df_best_time, hide_index=True, use_container_width=True)
 
 # --- Track Records ---
-'''
-## Track Records
-'''
+st.markdown("## Track Records")
 
 event = st.selectbox(
     'Choose event:',
@@ -180,10 +145,7 @@ event = st.selectbox(
 time = df_records['Record'].str.split(':', n=1, expand=True)
 df_records['Record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
 
-df_records = df_records.query(
-    'Event == @event'
-)
-
+df_records = df_records.query('Event == @event')
 df_progress = df_records.sort_values(['Date'])
 
 fig_progress = px.line(df_progress, 
@@ -198,12 +160,12 @@ y_labels = df_progress['Record'].tolist()
 
 fig_progress.update_yaxes(autorange='reversed',
                           categoryorder='array',
-                          categoryarray=y_labels
-                          )
+                          categoryarray=y_labels)
 
 fig_progress.update_xaxes(
     range=[
-        max((datetime.datetime.strptime(df_records['Date'].max(), '%Y-%m-%d') - timedelta(days=367)), (datetime.datetime.strptime(df_records['Date'].min(), '%Y-%m-%d') - timedelta(days=2))),
+        max((datetime.datetime.strptime(df_records['Date'].max(), '%Y-%m-%d') - timedelta(days=367)), 
+            (datetime.datetime.strptime(df_records['Date'].min(), '%Y-%m-%d') - timedelta(days=2))),
         datetime.datetime.strptime(df_records['Date'].max(), '%Y-%m-%d') + timedelta(days=2)
     ]
 )
@@ -211,9 +173,7 @@ fig_progress.update_xaxes(
 st.plotly_chart(fig_progress, use_container_width=True)
 
 # --- Distance Statistic ---
-'''
-## Distance Statistic
-'''
+st.markdown("## Distance Statistic")
 
 distance1, distance2 = st.columns([1, 2])
 
@@ -234,7 +194,6 @@ with distance1:
     }
 
     df_distance = pd.DataFrame(distance_data)
-
     st.dataframe(df_distance.sort_values(['Values'], ascending=False), 
                  hide_index=True,
                  use_container_width=True)
@@ -246,7 +205,7 @@ with distance2:
             radialaxis=dict(visible=True, range=[0, 100])
         ),
         polar_angularaxis=dict(
-            tickfont=dict(size=24)  # Adjust the size and weight (bold) of the text
+            tickfont=dict(size=24)
         ),
         showlegend=True
     )
@@ -254,39 +213,30 @@ with distance2:
     st.plotly_chart(radar)
 
 # --- Stroke Statistic ---
-'''
-## Stroke Statistic
-'''
+st.markdown("## Stroke Statistic")
 
 stroke1, stroke2 = st.columns([1, 2])
 
 with stroke1:
     stroke_data1 = {
-        'Category': ['Free',
-                     'Back',
-                     'Fly',
-                     'Breast'],
+        'Category': ['Free', 'Back', 'Fly', 'Breast'],
         '50M': [df_stats['50M Free Score'][0],
-                   df_stats['50M Back Score'][0],
-                   df_stats['50M Fly Score'][0],
-                   df_stats['50M Breast Score'][0]]
+                df_stats['50M Back Score'][0],
+                df_stats['50M Fly Score'][0],
+                df_stats['50M Breast Score'][0]]
     }
 
     stroke_data2 = {
-        'Category': ['Free',
-                     'Back',
-                     'Fly',
-                     'Breast'],
+        'Category': ['Free', 'Back', 'Fly', 'Breast'],
         '100M': [df_stats['100M Free Score'][0],
-                   df_stats['100M Back Score'][0],
-                   df_stats['100M Fly Score'][0],
-                   df_stats['100M Breast Score'][0]]
+                 df_stats['100M Back Score'][0],
+                 df_stats['100M Fly Score'][0],
+                 df_stats['100M Breast Score'][0]]
     }
 
     df_stroke1 = pd.DataFrame(stroke_data1)
     df_stroke2 = pd.DataFrame(stroke_data2)
-    df_stroke = df_stroke1
-    df_stroke = df_stroke.merge(df_stroke2, on='Category', how='left')
+    df_stroke = df_stroke1.merge(df_stroke2, on='Category', how='left')
     df_stroke['Average'] = df_stroke[['50M', '100M']].mean(axis=1)
     df_stroke['Rank'] = df_stroke['Average'].apply(assign_rank)
     
@@ -296,47 +246,30 @@ with stroke1:
 
 with stroke2:
     radar = px.line_polar(df_stroke, r='Average', theta='Category', line_close=True)
-    # radar = radar.add_trace(px.line_polar(df_stroke2, r='Values 100M', theta='Category', line_close=True).data[0])
     radar.update_layout(
         polar=dict(
             radialaxis=dict(visible=True, range=[0, 100])
         ),
         polar_angularaxis=dict(
-            tickfont=dict(size=24)  # Adjust the size and weight (bold) of the text
+            tickfont=dict(size=24)
         ),
         showlegend=True
     )
 
     st.plotly_chart(radar)
 
-'''
-## Competitions
-'''
+# --- Competitions ---
+st.markdown("## Competitions")
 
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
-
-df_records = df_records.query(
-    'Name == @athlete'
-).sort_values(['Date'], ascending=False)
+df_records_comp = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_records_comp = df_records_comp.query('Name == @athlete').sort_values(['Date'], ascending=False)
 
 competition = st.selectbox(
     'Choose competition:',
-    options=sorted(df_records['Competition'].unique())
+    options=df_records_comp['Competition'].unique()
 )
 
-df_records = df_records.query(
-    'Competition == @competition'
-)
+df_records_comp = df_records_comp.query('Competition == @competition')
+df_records_comp = df_records_comp.drop(columns=['Name', 'Sex', 'Year of Birth', 'Competition'])
 
-df_records = df_records.drop(columns=[
-    'Name',
-    'Sex',
-    'Year of Birth',
-    'Competition'
-])
-
-st.dataframe(
-    df_records,
-    hide_index=True, 
-    use_container_width=True
-)
+st.dataframe(df_records_comp, hide_index=True, use_container_width=True)
