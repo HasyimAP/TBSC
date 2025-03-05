@@ -27,6 +27,7 @@ df_competition['End Date'] = end_date
 df_competition['Total Athletes'] = total_athletes
 
 df_competition = df_competition.dropna(axis=1, how='all')
+df_competition = df_competition.sort_values(by='End Date', ascending=False)
 st.dataframe(df_competition.sort_values(by='End Date', ascending=False), use_container_width=True)
 
 # --- UPDATE DATA ---
