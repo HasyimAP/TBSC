@@ -139,7 +139,7 @@ with col_comp2:
     today = datetime.date.today()
     
     timeline = px.bar(
-        df_competitions,
+        df_competitions.sort_values(by='End Date', ascending=True),
         x='Competition',
         y='Total Athletes',
         range_x=[len(df_competitions)-10, len(df_competitions)],
