@@ -1,8 +1,6 @@
 from datetime import datetime
-import difflib
 from typing import Optional
 import pandas as pd
-import PyPDF2
 import re
 import streamlit as st
 import pdfplumber
@@ -70,7 +68,7 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
         'GAYA KUPU-KUPU': 'BUTTERFLY',
         'GAYA BEBAS': 'FREESTYLE',
         'GAYA DADA': 'BREASTSTROKE',
-        'GAYA GANTI': 'INDIVIDUAL MEDLEY',
+        'GAYA GANTI PERORANGAN': 'INDIVIDUAL MEDLEY',
         'GAYA KUPU KUPU': 'BUTTERFLY',
         'GAYA KUPU': 'BUTTERFLY',
         'GAYA PUNGGUNG': 'BACKSTROKE'
@@ -83,7 +81,7 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
     athlete_list = df_athletes['Name'].tolist()
 
     for line in lines:
-        if any(word.upper() in line.upper() for word in ['ACARA', 'DICETAK', 'Sponsor', '27 - 29']):
+        if any(word.upper() in line.upper() for word in ['ACARA', 'DICETAK', 'Sponsor', '13 - 15']):
             continue
 
         replacements = {
@@ -103,7 +101,7 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
                 for ind_event, eng_event in event_ind_to_eng.items():
                     event = event.replace(ind_event, eng_event)
         
-        date_match = re.search(r'(\d{2}/08/2024)', line)
+        date_match = re.search(r'(\d{2} FEBRUARI 2025)', line)
         if date_match:
             date = date_match.group()
         
@@ -117,11 +115,11 @@ def process_txt_file(input_file: str, competition: str, ind: bool = True):
             }
 
             name = s.strip().upper()
-            # name_list = name.split(' ')
-            # if len(name_list) > 3:
-            #     name = ' '.join(name_list[:int(len(name_list) * 0.8)])
-            # else:
-            #     name = s.upper()
+            name_list = name.split(' ')
+            if len(name_list) > 3:
+                name = ' '.join(name_list[:int(len(name_list) * 0.8)])
+            else:
+                name = s.upper()
             
             if name in line.upper():
                 data.append(record)
@@ -183,7 +181,7 @@ def check_total_athletes(input_file: str):
     return set(athlete)
 
 if __name__ == '__main__':
-    event = 'Amarta Regis Cup 2024'
+    event = 'KRASSI 2025'
     pdf_path = f'full_result/{event}.pdf'
     txt_path = 'output.txt'
 
@@ -213,9 +211,9 @@ if __name__ == '__main__':
     # clean_data['Year of Birth'] = clean_data['Year of Birth'].astype(float).astype(int)
 
     # clean_data['Date'] = clean_data['Date'].replace('MARET', 'MEI')
-    # clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
+    clean_data['Date'] = clean_data['Date'].apply(convert_to_date).dt.date
     # clean_data['Date'] = pd.to_datetime(clean_data['Date'], format='%d/%m/%Y', utc=False).dt.date
-    clean_data['Date'] = '2024-08-24'
+    # clean_data['Date'] = '2024-08-24'
 
     def format_record(time: str):
         try:
@@ -257,7 +255,8 @@ if __name__ == '__main__':
 
     print('\nNot listed athlete: ', len(not_listed))
     print(sorted(not_listed))
-
+    
+    clean_data = clean_data.apply(lambda x: x.str.strip() if x.dtype == 'object' else x)
     clean_data.to_excel('check_sheets.xlsx', index=False)
     exit()
     df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
