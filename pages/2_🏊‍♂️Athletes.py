@@ -128,11 +128,12 @@ with col3:
 
 # --- Competition Timeline ---
 df_competitions = df_competitions.dropna(axis=0, how='all')
+df_competitions = df_competitions.sort_values(by='End Date', ascending=False)
 
 col_comp1, col_comp2 = st.columns([3, 4])
 
 with col_comp1:
-    st.dataframe(df_competitions.sort_values(by='End Date', ascending=False), hide_index=True)
+    st.dataframe(df_competitions, hide_index=True)
 
 with col_comp2:
     today = datetime.date.today()
