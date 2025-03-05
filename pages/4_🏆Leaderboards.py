@@ -142,7 +142,7 @@ best_time['Year of Birth'] = best_time['Year of Birth'].astype(str).replace('\.0
 best_time.index.name = 'Rank'
 best_time.index = best_time.index + 1
 
-st.dataframe(best_time)
+st.dataframe(best_time, use_container_width=True)
 
 st.header('Statistics Rankings')
 
