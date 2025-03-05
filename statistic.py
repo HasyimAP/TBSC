@@ -87,15 +87,14 @@ df_versatile['Versatility Score'] = df_versatile[['50M Free Score',
 df_stats['Versatility Score'] = df_versatile['Versatility Score']
 
 # --- Stamina Score ---
-current_year = datetime.date.today().year
-age_group_3 = current_year - 12
-df_stamina1 = df_best_time[df_best_time['Event'] == '400M FREESTYLE'][df_best_time['Year of Birth'] <= age_group_3][['Name', 'Score']]
-df_stamina1.reset_index(drop=True, inplace=True)
-df_stamina1.rename(columns={'Score':'Stamina Score'}, inplace=True)
-df_stamina2 = df_best_time[df_best_time['Event'] == '200M FREESTYLE'][df_best_time['Year of Birth'] > age_group_3][['Name', 'Score']]
-df_stamina2.reset_index(drop=True, inplace=True)
-df_stamina2.rename(columns={'Score':'Stamina Score'}, inplace=True)
-df_stamina = pd.concat([df_stamina1, df_stamina2], ignore_index=True)
+df_200free = df_best_time[df_best_time['Event'] == '200M FREESTYLE'][['Name', 'Score']]
+df_200free.rename(columns={'Score':'200M Free Score'}, inplace=True)
+df_400free = df_best_time[df_best_time['Event'] == '400M FREESTYLE'][['Name', 'Score']]
+df_400free.rename(columns={'Score':'400M Free Score'}, inplace=True)
+
+df_stamina = df_stats_copy[['Name']].merge(df_200free, on='Name', how='left').fillna(0)
+df_stamina = df_stamina.merge(df_400free, on='Name', how='left').fillna(0)
+df_stamina['Stamina Score'] = (0.4 * df_stamina['200M Free Score']) + (0.6 * df_stamina['400M Free Score'])
 df_stats_copy = df_stats_copy.merge(df_stamina, on='Name', how='left')
 df_stats['Stamina Score'] = df_stats_copy['Stamina Score'].fillna(0)
 
@@ -115,10 +114,6 @@ df_stats['Overall Rank'] = df_stats['Overall Score'].apply(assign_rank)
 # --- Distance Specialization ---
 df_100free = df_best_time[df_best_time['Event'] == '100M FREESTYLE'][['Name', 'Score']]
 df_100free.rename(columns={'Score':'100M Free Score'}, inplace=True)
-df_200free = df_best_time[df_best_time['Event'] == '200M FREESTYLE'][['Name', 'Score']]
-df_200free.rename(columns={'Score':'200M Free Score'}, inplace=True)
-df_400free = df_best_time[df_best_time['Event'] == '400M FREESTYLE'][['Name', 'Score']]
-df_400free.rename(columns={'Score':'400M Free Score'}, inplace=True)
 df_800free = df_best_time[df_best_time['Event'] == '800M FREESTYLE'][['Name', 'Score']]
 df_800free.rename(columns={'Score':'800M Free Score'}, inplace=True)
 df_1500free = df_best_time[df_best_time['Event'] == '1500M FREESTYLE'][['Name', 'Score']]
@@ -140,22 +135,45 @@ df_stats = df_stats.merge(df_distance, on='Name', how='left')
 # --- Stroke Specialization ---
 df_100fly = df_best_time[df_best_time['Event'] == '100M BUTTERFLY'][['Name', 'Score']]
 df_100fly.rename(columns={'Score':'100M Fly Score'}, inplace=True)
+df_200fly = df_best_time[df_best_time['Event'] == '200M BUTTERFLY'][['Name', 'Score']]
+df_200fly.rename(columns={'Score':'200M Fly Score'}, inplace=True)
 df_100back = df_best_time[df_best_time['Event'] == '100M BACKSTROKE'][['Name', 'Score']]
 df_100back.rename(columns={'Score':'100M Back Score'}, inplace=True)
+df_200back = df_best_time[df_best_time['Event'] == '200M BACKSTROKE'][['Name', 'Score']]
+df_200back.rename(columns={'Score':'200M Back Score'}, inplace=True)
 df_100breast = df_best_time[df_best_time['Event'] == '100M BREASTSTROKE'][['Name', 'Score']]
 df_100breast.rename(columns={'Score':'100M Breast Score'}, inplace=True)
+df_200breast = df_best_time[df_best_time['Event'] == '200M BREASTSTROKE'][['Name', 'Score']]
+df_200breast.rename(columns={'Score':'200M Breast Score'}, inplace=True)
+df_400im = df_best_time[df_best_time['Event'] == '400M INDIVIDUAL MEDLEY'][['Name', 'Score']]
+df_400im.rename(columns={'Score':'400M IM Score'}, inplace=True)
+
 df_stroke = df_stats_copy[['Name']].merge(df_50fly, on='Name', how='left').fillna(0)
 df_stroke['50M Fly Rank'] = df_stroke['50M Fly Score'].apply(assign_rank)
-df_stroke = df_stroke.merge(df_50back, on='Name', how='left').fillna(0)
-df_stroke['50M Back Rank'] = df_stroke['50M Back Score'].apply(assign_rank)
-df_stroke = df_stroke.merge(df_50breast, on='Name', how='left').fillna(0)
-df_stroke['50M Breast Rank'] = df_stroke['50M Breast Score'].apply(assign_rank)
 df_stroke = df_stroke.merge(df_100fly, on='Name', how='left').fillna(0)
 df_stroke['100M Fly Rank'] = df_stroke['100M Fly Score'].apply(assign_rank)
+df_stroke = df_stroke.merge(df_200fly, on='Name', how='left').fillna(0)
+df_stroke['200M Fly Rank'] = df_stroke['200M Fly Score'].apply(assign_rank)
+
+df_stroke = df_stroke.merge(df_50back, on='Name', how='left').fillna(0)
+df_stroke['50M Back Rank'] = df_stroke['50M Back Score'].apply(assign_rank)
 df_stroke = df_stroke.merge(df_100back, on='Name', how='left').fillna(0)
 df_stroke['100M Back Rank'] = df_stroke['100M Back Score'].apply(assign_rank)
+df_stroke = df_stroke.merge(df_200back, on='Name', how='left').fillna(0)
+df_stroke['200M Back Rank'] = df_stroke['200M Back Score'].apply(assign_rank)
+
+df_stroke = df_stroke.merge(df_50breast, on='Name', how='left').fillna(0)
+df_stroke['50M Breast Rank'] = df_stroke['50M Breast Score'].apply(assign_rank)
 df_stroke = df_stroke.merge(df_100breast, on='Name', how='left').fillna(0)
 df_stroke['100M Breast Rank'] = df_stroke['100M Breast Score'].apply(assign_rank)
+df_stroke = df_stroke.merge(df_200breast, on='Name', how='left').fillna(0)
+df_stroke['200M Breast Rank'] = df_stroke['200M Breast Score'].apply(assign_rank)
+
+df_stroke = df_stroke.merge(df_200im, on='Name', how='left').fillna(0)
+df_stroke['200M IM Rank'] = df_stroke['200M IM Score'].apply(assign_rank)
+df_stroke = df_stroke.merge(df_400im, on='Name', how='left').fillna(0)
+df_stroke['400M IM Rank'] = df_stroke['400M IM Score'].apply(assign_rank)
+
 df_stats = df_stats.merge(df_stroke, on='Name', how='left')
 
 '''Stats preview'''
