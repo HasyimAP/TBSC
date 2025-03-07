@@ -15,7 +15,7 @@ import sentry_sdk
 import streamlit as st
 import sys
 
-from utilities import exception_handler
+from utilities import create_watermark, exception_handler
 
 sentry_sdk.init()
 
@@ -246,42 +246,6 @@ with col3:
         pass
 
 with col4:
-    def create_watermark(pdf: FPDF):
-        watermark_image = 'images/logo_TBSC.jpeg'
-        image = Image.open(watermark_image).convert("RGBA")
-    
-        alpha = image.split()[3]
-        alpha = alpha.point(lambda p: p * 0.2) 
-        image.putalpha(alpha)
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-            image.save(temp_file.name, format='PNG')
-            watermark_image = temp_file.name
-
-        with Image.open(watermark_image) as img:
-            watermark_width, watermark_height = img.size
-        
-        if watermark_width > watermark_height:
-            scale = pdf.w / watermark_width
-            new_width = pdf.w/2
-            new_height = (watermark_height * scale)/2
-        else:
-            scale = pdf.h / watermark_height
-            new_width = (watermark_width * scale)/2
-            new_height = pdf.h/2
-        
-        x_position = (pdf.w - new_width) / 2
-        y_position = (pdf.h - new_height) / 2
-        
-        wm = {
-            'wm': watermark_image,
-            'x': x_position,
-            'y': y_position,
-            'w': new_width,
-            'h': new_height
-        }
-        return wm
-
     def df_to_pdf(event_list: list[str]):
         pdf = FPDF()
         pdf.add_page()
@@ -334,7 +298,7 @@ with col4:
                 
                 pdf.image(wm_img['wm'], x=wm_img['x'], y=wm_img['y'], w=wm_img['w'], h=wm_img['h'])
         
-        return pdf.output(dest='S').encode('latin1')
+        return bytes(pdf.output(dest='S'))
     
     try:
         pdf_bytes = df_to_pdf(events)
