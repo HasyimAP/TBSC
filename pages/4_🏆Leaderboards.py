@@ -142,7 +142,7 @@ best_time['Year of Birth'] = best_time['Year of Birth'].astype(str).replace('\.0
 best_time.index.name = 'Rank'
 best_time.index = best_time.index + 1
 
-st.dataframe(best_time, use_container_width=True)
+st.dataframe(best_time.drop(columns='Record (s)'), use_container_width=True)
 
 st.header('Statistics Rankings')
 
@@ -183,6 +183,7 @@ df_statistic = df_statistic[[
     'Name',
     'Sex',
     'Year of Birth',
+    'Current Age',
     'Age Group',
     f'{statistic_group} Score',
     f'{statistic_group} Rank',
