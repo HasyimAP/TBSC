@@ -1,5 +1,6 @@
 import base64
 import datetime
+import json
 import sys
 import pandas as pd
 import sentry_sdk
@@ -9,6 +10,7 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
+from ai_analysis import analyze_athlete_stats
 from utilities import assign_rank, categorize_age, exception_handler
 from streamlit_gsheets import GSheetsConnection
 
@@ -65,7 +67,7 @@ athlete = st.selectbox(
 )
 
 # --- Athlete Statistic ---
-col1, col2 = st.columns([1,2])
+col1, col2 = st.columns([1,3])
 
 df_stats = df_stats.query('Name == @athlete').reset_index()
 
@@ -93,6 +95,10 @@ with col1:
 
     st.markdown(athlete_data)
 
+    with st.expander('Scoring System'):
+        st.write('The scoring system is based on the athlete\'s performance in each event. The athlete\'s score is calculated by the following formula:')
+        st.latex(r'Score = \frac{National Record}{Personal Best} \times 100')
+
 with col2:
     radar_data = {
         'Category': [f'Speed ({df_stats["Speed Rank"][0]})',
@@ -117,7 +123,53 @@ with col2:
         showlegend=True
     )
 
-    st.plotly_chart(radar)
+    st.plotly_chart(radar, use_container_width=True)
+
+with st.expander('Ranking System'):
+    st.write('The athlete\'s rank is based on the athlete\'s score in each category. The athlete\'s rank is grouped into the following categories:')
+    
+    rs_col1, rs_col2, rs_col3, rs_col4, rs_col5 = st.columns(5)
+
+    with rs_col1:
+        st.markdown("""
+        - 100.00 - 98.00: EX
+        - 98.00 - 95.00: S+
+        - 95.00 - 92.50: S
+        - 92.50 - 90.00: S-
+        """)
+
+    with rs_col2:
+        st.markdown("""
+        - 87.00 - 90.00: A+
+        - 83.00 - 87.00: A
+        - 80.00 - 83.00: A-
+        - 77.00 - 80.00: B+
+        """)
+
+    with rs_col3:
+        st.markdown("""
+        - 73.00 - 77.00: B
+        - 70.00 - 73.00: B-
+        - 67.00 - 70.00: C+
+        - 63.00 - 67.00: C
+        """)
+
+    with rs_col4:
+        st.markdown("""
+        - 60.00 - 63.00: C-
+        - 57.00 - 60.00: D+
+        - 53.00 - 57.00: D
+        - 50.00 - 53.00: D-
+        """)
+
+    with rs_col5:
+        st.markdown("""
+        - 45.00 - 50.00: E+
+        - 35.00 - 45.00: E
+        - 25.00 - 35.00: E-
+        - Below 25.00: F
+        """)
+        
 
 # --- DATAFRAME BEST TIME ---
 df_records = df_records.query('Name == @athlete').sort_values(['Date'], ascending=False)
@@ -129,7 +181,34 @@ df_best_time['Record (s)'] = time[0].astype(float)*60 + time[1].astype(float)
 idx = df_best_time.groupby('Event')['Record (s)'].idxmin()
 df_best_time = df_best_time.loc[idx]
 df_best_time.reset_index(drop=True, inplace=True)
-df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Date']]
+
+df_best_time['Score'] = None
+df_best_time['Rank'] = None
+
+for idx, row in df_best_time.iterrows():
+    _distance = row['Event'].split(' ')[0]
+    _stroke = row['Event'].replace(f'{_distance} ', '').strip()
+
+    stroke_mapping = {
+        'FREE': 'Free',
+        'BACK': 'Back',
+        'FLY': 'Fly',
+        'BREAST': 'Breast',
+        'MEDLEY': 'IM'
+    }
+
+    # Iterate through the mapping dictionary
+    for key, value in stroke_mapping.items():
+        if key in _stroke:
+            _stroke = value
+            break
+    
+    _event = f'{_distance} {_stroke}'
+
+    df_best_time.loc[idx, 'Score'] = df_stats[f'{_event} Score'][0]
+    df_best_time.loc[idx, 'Rank'] = df_stats[f'{_event} Rank'][0]
+
+df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Date', 'Score', 'Rank']]
 
 st.markdown("## Best Times")
 st.dataframe(df_best_time, hide_index=True, use_container_width=True)
@@ -272,4 +351,42 @@ competition = st.selectbox(
 df_records_comp = df_records_comp.query('Competition == @competition')
 df_records_comp = df_records_comp.drop(columns=['Name', 'Sex', 'Year of Birth', 'Competition'])
 
+df_records_comp['Performance'] = None 
+
+for idx, row in df_records_comp.iterrows():
+    _event = row['Event']
+    _record = row['Record']
+
+    best_time = df_best_time.query('Event == @_event')['Record'].values[0]
+
+    if _record == best_time:
+        df_records_comp.loc[idx, 'Performance'] = '🔥New Personal Best Time🔥'
+    else:
+        _record_s = _record.split(':')
+        _record_s = float(_record_s[0])*60 + float(_record_s[1])
+
+        best_time_s = best_time.split(':')
+        best_time_s = float(best_time_s[0])*60 + float(best_time_s[1])
+
+        diff = _record_s - best_time_s
+        diff = round(diff, 2)
+        diff_percent = (diff / best_time_s) * 100
+        diff_percent = round(diff_percent, 2)
+        if diff_percent <= 3.00:
+            _emot = '🟡'
+        elif diff_percent <= 5.00:
+            _emot = '🟠'
+        else:
+            _emot = '🔴'
+
+        df_records_comp.loc[idx, 'Performance'] = f'{diff} s ({diff_percent}%) Slower than PR {_emot}'
+
 st.dataframe(df_records_comp, hide_index=True, use_container_width=True)
+
+#  AI Analysis
+st.markdown("## AI Analysis")
+st.write('COMING SOON')
+
+# if st.button('Analyze Athlete Stats'):
+#     ai_analysis = analyze_athlete_stats(bio=athlete_data, stats=df_stats.to_dict(orient='records')[0])
+#     st.write(json.loads(ai_analysis.text))
