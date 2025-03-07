@@ -1,8 +1,11 @@
-fpdf==1.7.2
+fpdf2
 google-genai
-numpy==1.26.2
+markdown2
+mistletoe
+numpy
 openpyxl==3.1.2
 pandas==2.2.2
+pdfkit
 pdfplumber
 Pillow
 plotly
