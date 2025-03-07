@@ -1,7 +1,9 @@
 fpdf==1.7.2
+google-genai
 numpy==1.26.2
 openpyxl==3.1.2
 pandas==2.2.2
+pdfplumber
 Pillow
 plotly
 PyPDF2
