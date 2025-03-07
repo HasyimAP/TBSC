@@ -434,4 +434,4 @@ if st.button('Analyze Athlete Stats'):
             mime='application/pdf'
         )
     
-    st.write(json.loads(ai_analysis.text))
+    # st.write(json.loads(ai_analysis.text))
