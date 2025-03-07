@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class AthleteSwot(BaseModel):
-    biodata: str = Field(..., description='Summary of the athlete biodata.')
+    biodata: str = Field(..., description='Summary of the athlete biodata. This explains who the athlete is, their age, their current status, and their overall swimming career.')
     strengths: str = Field(..., description='Athlete strength points. What are they good at?')
     weaknesses: str = Field(..., description='Athlete weakness points. What are they bad at?')
     opportunities: str = Field(..., description='Athlete opportunities. What can they improve on?')
@@ -16,9 +16,10 @@ class AthleteSwot(BaseModel):
     weakest_stroke: str = Field(..., description='Athlete weakest stroke based on the available data. Should be 1 of the following: freestyle, backstroke, breaststroke, butterfly.')
     weakest_distance: str = Field(..., description='Athlete weakest distance based on the available data. Should be 1 of the following: sprint, middle distance, long distance.')
     medley: str = Field(..., description='Based on the available data, should the athlete focus on medley events? Yes or No. Explain why.')
+    specialization: str = Field(..., description='Athlete specialization. Considering their age, potential growth, and current performance, should they start specializing in a specific stroke or distance? Yes, No, or Maybe. Prioritize Yes or No, only use Maybe if you are unsure. For younger athletes, it is recommended to focus on all strokes and distances. For older athletes, it is recommended to start specializing. Explain why.')
     development_plan: str = Field(..., description='Athlete development plan. What kind of swimmer should they aim to be? Is it a sprinter, distance swimmer, all-rounder, or anything else?')
-    short_term_goals: str = Field(..., description='Athlete short term goals. What should they aim to achieve in the next 6 months? Should be specific, measurable, achievable, relevant, and time-bound.')
-    long_term_goals: str = Field(..., description='Athlete long term goals. What should they aim to achieve in the next 1 year? Should be specific, measurable, achievable, relevant, and time-bound.')
+    short_term_goals: str = Field(..., description='Athlete short term goals. What should they aim to achieve in the next 6 months or in the minor competitions? Should be specific, measurable, achievable, relevant, and time-bound.')
+    long_term_goals: str = Field(..., description='Athlete long term goals. What should they aim to achieve in the next 1 year or in the major competitions? Should be specific, measurable, achievable, relevant, and time-bound.')
 
 @st.cache_resource(ttl='1d')
 def analyze_athlete_stats(bio: str, stats: dict):
@@ -27,7 +28,7 @@ def analyze_athlete_stats(bio: str, stats: dict):
 
     Here is the athlete's bio that you will analyze:
     {bio}
-    Note: INACTIVE means the athlete is not currently competing or already retired. SEMI-ACTIVE means the athlete is competing but not as often as before, maybe around 1-2 times a year because of other commitments.
+    Note: INACTIVE means the athlete is not currently competing or already retired and never come to training anymore. SEMI-ACTIVE means the athlete is competing but not as often as before, maybe around 1-2 times a year because of other commitments like school or work and only come to training when near competition. ACTIVE means the athlete is competing regularly and come to training consistently.
 
     Here is the athelete's statistics that you will analyze:
     {stats}

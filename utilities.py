@@ -1,8 +1,13 @@
 import json
+from fpdf import FPDF
+from fpdf.html import HTMLMixin
+import markdown2
 import os
 import shutil
 import streamlit as st
 import tempfile
+
+from PIL import Image
 
 
 def assign_rank(score):
@@ -110,3 +115,68 @@ def exception_handler(e):
         st.write(e)
     
     raise e
+
+def create_watermark(pdf: FPDF):
+        watermark_image = 'images/logo_TBSC.jpeg'
+        image = Image.open(watermark_image).convert("RGBA")
+    
+        alpha = image.split()[3]
+        alpha = alpha.point(lambda p: p * 0.2) 
+        image.putalpha(alpha)
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+            image.save(temp_file.name, format='PNG')
+            watermark_image = temp_file.name
+
+        with Image.open(watermark_image) as img:
+            watermark_width, watermark_height = img.size
+        
+        if watermark_width > watermark_height:
+            scale = pdf.w / watermark_width
+            new_width = pdf.w/2
+            new_height = (watermark_height * scale)/2
+        else:
+            scale = pdf.h / watermark_height
+            new_width = (watermark_width * scale)/2
+            new_height = pdf.h/2
+        
+        x_position = (pdf.w - new_width) / 2
+        y_position = (pdf.h - new_height) / 2
+        
+        wm = {
+            'wm': watermark_image,
+            'x': x_position,
+            'y': y_position,
+            'w': new_width,
+            'h': new_height
+        }
+        return wm
+
+class PDF(FPDF, HTMLMixin):
+    def __init__(self, watermark=None):
+        super().__init__()
+        self.watermark = watermark
+
+    def header(self):
+        # Add a watermark to each page
+        if self.watermark:
+            self.image(self.watermark['wm'], self.watermark['x'], self.watermark['y'], self.watermark['w'], self.watermark['h'])
+
+def markdown_to_pdf(markdown_content):
+    html_content = markdown2.markdown(markdown_content)
+    
+    pdf = PDF()
+    pdf.add_page()
+
+    wm_img = create_watermark(pdf)
+    pdf.image(wm_img['wm'], x=wm_img['x'], y=wm_img['y'], w=wm_img['w'], h=wm_img['h'])
+    pdf.watermark = wm_img
+    
+    # Add HTML content to PDF
+    pdf.set_auto_page_break(auto=True, margin=15)
+    # pdf.set_font("Arial", size=10)
+    pdf.write_html(html_content)
+    # pdf.multi_cell(0, 10, html_content)
+    
+    return bytes(pdf.output(dest='S'))
+    

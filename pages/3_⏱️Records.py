@@ -11,7 +11,7 @@ from PIL import Image
 from pathlib import Path
 from datetime import timedelta
 from ai_analysis import analyze_athlete_stats
-from utilities import assign_rank, categorize_age, exception_handler
+from utilities import assign_rank, categorize_age, exception_handler, markdown_to_pdf
 from streamlit_gsheets import GSheetsConnection
 
 sentry_sdk.init()
@@ -387,6 +387,51 @@ st.dataframe(df_records_comp, hide_index=True, use_container_width=True)
 st.markdown("## AI Analysis")
 st.write('COMING SOON')
 
-# if st.button('Analyze Athlete Stats'):
-#     ai_analysis = analyze_athlete_stats(bio=athlete_data, stats=df_stats.to_dict(orient='records')[0])
-#     st.write(json.loads(ai_analysis.text))
+if st.button('Analyze Athlete Stats'):
+    ai_analysis = analyze_athlete_stats(bio=athlete_data, stats=df_stats.to_dict(orient='records')[0])
+    stats_json = json.loads(ai_analysis.text)
+    with st.expander('View AI Analysis Result (SWOT Analysis)'):
+        swot_analysis = (f"""
+        #### Short Bio
+        {stats_json['biodata']}
+        
+        #### Athlete Strengths, What are they good at?
+        {stats_json['strengths']}
+
+        #### Athlete Weaknesses, What are they bad at?
+        {stats_json['weaknesses']}
+
+        #### Athlete Opportunities, What can they improve on?
+        {stats_json['opportunities']}
+
+        #### Athlete Threats, What can hinder their performance?
+        {stats_json['threats']}
+
+        #### Specialization
+        - **Best Stroke:** {stats_json['best_stroke']}
+        - **Best Distance:** {stats_json['best_distance']}
+        - **Weakest Stroke:** {stats_json['weakest_stroke']}
+        - **Weakest Distance:** {stats_json['weakest_distance']}
+        - **Should the athlete focus on medley events?** {stats_json['medley']}
+        - **Should the athlete start specializing in a specific stroke or distance?** {stats_json['specialization']}
+
+        #### Goals & Development Plan
+        - **Development Plan:** {stats_json['development_plan']}
+        - **Short Term Goals:** {stats_json['short_term_goals']}
+        - **Long Term Goals:** {stats_json['long_term_goals']}
+        """)
+
+        st.markdown(swot_analysis)
+
+        output_path = f'{athlete} SWOT Analysis.pdf'
+        swot_pdf_bytes = markdown_to_pdf(swot_analysis)
+        # if st.button('Download SWOT Analysis PDF'):
+        #     swot_pdf_bytes.output(output_path)
+        st.download_button(
+            label='Download SWOT Analysis PDF',
+            data=swot_pdf_bytes,
+            file_name=output_path,
+            mime='application/pdf'
+        )
+    
+    st.write(json.loads(ai_analysis.text))
