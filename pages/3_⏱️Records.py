@@ -194,6 +194,7 @@ for idx, row in df_best_time.iterrows():
         'BACK': 'Back',
         'FLY': 'Fly',
         'BREAST': 'Breast',
+        'INDIVIDUAL MEDLEY': 'IM',
         'MEDLEY': 'IM'
     }
 
@@ -204,9 +205,13 @@ for idx, row in df_best_time.iterrows():
             break
     
     _event = f'{_distance} {_stroke}'
-
-    df_best_time.loc[idx, 'Score'] = df_stats[f'{_event} Score'][0]
-    df_best_time.loc[idx, 'Rank'] = df_stats[f'{_event} Rank'][0]
+    
+    if f'{_event} Score' in df_stats.columns:
+        df_best_time.loc[idx, 'Score'] = df_stats[f'{_event} Score'][0]
+        df_best_time.loc[idx, 'Rank'] = df_stats[f'{_event} Rank'][0]
+    else:
+        df_best_time.loc[idx, 'Score'] = None
+        df_best_time.loc[idx, 'Rank'] = None
 
 df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Date', 'Score', 'Rank']]
 
