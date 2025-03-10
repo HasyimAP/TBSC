@@ -1,12 +1,11 @@
 import json
-from fpdf import FPDF
-from fpdf.html import HTMLMixin
 import markdown2
 import os
 import shutil
 import streamlit as st
 import tempfile
 
+from fpdf import FPDF
 from PIL import Image
 
 
@@ -152,7 +151,7 @@ def create_watermark(pdf: FPDF):
         }
         return wm
 
-class PDF(FPDF, HTMLMixin):
+class PDF(FPDF):
     def __init__(self, watermark=None):
         super().__init__()
         self.watermark = watermark
@@ -162,19 +161,18 @@ class PDF(FPDF, HTMLMixin):
         if self.watermark:
             self.image(self.watermark['wm'], self.watermark['x'], self.watermark['y'], self.watermark['w'], self.watermark['h'])
 
-def markdown_to_pdf(markdown_content):
-    html_content = markdown2.markdown(markdown_content)
-    
-    pdf = PDF()
-    pdf.add_page()
+def markdown_to_pdf(markdown_content: str):
+    html_content = markdown2.markdown(markdown_content.strip(), extras=["tables"])
 
+    pdf = PDF()
     wm_img = create_watermark(pdf)
-    pdf.image(wm_img['wm'], x=wm_img['x'], y=wm_img['y'], w=wm_img['w'], h=wm_img['h'])
     pdf.watermark = wm_img
+
+    pdf.add_page()
     
     # Add HTML content to PDF
     pdf.set_auto_page_break(auto=True, margin=15)
-    # pdf.set_font("Arial", size=10)
+    pdf.set_font("Arial", size=12)
     pdf.write_html(html_content)
     # pdf.multi_cell(0, 10, html_content)
     
