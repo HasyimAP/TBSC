@@ -352,6 +352,8 @@ df_records_comp = df_records_comp.query('Competition == @competition')
 df_records_comp = df_records_comp.drop(columns=['Name', 'Sex', 'Year of Birth', 'Competition'])
 
 df_records_comp['Performance'] = None 
+df_records_comp['Score'] = None 
+df_records_comp['Rank'] = None 
 
 for idx, row in df_records_comp.iterrows():
     _event = row['Event']
@@ -361,6 +363,8 @@ for idx, row in df_records_comp.iterrows():
 
     if _record == best_time:
         df_records_comp.loc[idx, 'Performance'] = '🔥New Personal Best Time🔥'
+        df_records_comp.loc[idx, 'Score'] = df_best_time.query('Event == @_event')['Score'].values[0]
+        df_records_comp.loc[idx, 'Rank'] = df_best_time.query('Event == @_event')['Rank'].values[0]
     else:
         _record_s = _record.split(':')
         _record_s = float(_record_s[0])*60 + float(_record_s[1])
@@ -380,6 +384,12 @@ for idx, row in df_records_comp.iterrows():
             _emot = '🔴'
 
         df_records_comp.loc[idx, 'Performance'] = f'{diff} s ({diff_percent}%) Slower than PR {_emot}'
+    
+        best_score = df_best_time.query('Event == @_event')['Score'].values[0]
+        _score = (best_time_s / _record_s) * best_score
+        _rank = assign_rank(_score)
+        df_records_comp.loc[idx, 'Score'] = round(_score, 2)
+        df_records_comp.loc[idx, 'Rank'] = _rank
 
 st.dataframe(df_records_comp, hide_index=True, use_container_width=True)
 
