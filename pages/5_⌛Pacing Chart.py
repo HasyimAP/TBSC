@@ -7,6 +7,7 @@ import tempfile
 
 from PIL import Image
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 from pathlib import Path
 from streamlit_gsheets import GSheetsConnection
 
@@ -255,10 +256,10 @@ with col4:
         pdf.image(wm_img['wm'], x=wm_img['x'], y=wm_img['y'], w=wm_img['w'], h=wm_img['h'])
         
         # Font and size
-        pdf.set_font('Arial', size=12)
+        pdf.set_font('Helvetica', size=12)
         
         # Title
-        pdf.cell(200, 10, txt=athlete, ln=True, align='C')
+        pdf.cell(200, 10, text=athlete, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
         pdf.ln(5)
 
         for i_event, event in enumerate(event_list):
@@ -272,13 +273,13 @@ with col4:
             pdf.set_x(start_x)
 
             # Column names 
-            pdf.set_font('Arial', 'B', size=12)  # Bold font for headers
+            pdf.set_font('Helvetica', 'B', size=12)  # Bold font for headers
             for i, col in enumerate(dataframe.columns):
                 pdf.cell(col_widths[i], 10, col, 1, align='C')
             pdf.ln()
             
             # Row data
-            pdf.set_font('Arial', size=12)  # Regular font for data
+            pdf.set_font('Helvetica', size=12)  # Regular font for data
             for _, row in dataframe.iterrows():
                 pdf.set_x(start_x)
                 for i, col in enumerate(dataframe.columns):
@@ -293,12 +294,12 @@ with col4:
                 break
             else:
                 pdf.add_page()
-                pdf.cell(200, 10, txt=athlete, ln=True, align='C')
+                pdf.cell(200, 10, text=athlete, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
                 pdf.ln(5)
                 
                 pdf.image(wm_img['wm'], x=wm_img['x'], y=wm_img['y'], w=wm_img['w'], h=wm_img['h'])
         
-        return bytes(pdf.output(dest='S'))
+        return bytes(pdf.output())
     
     try:
         pdf_bytes = df_to_pdf(events)
