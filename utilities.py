@@ -176,5 +176,5 @@ def markdown_to_pdf(markdown_content: str):
     pdf.write_html(html_content)
     # pdf.multi_cell(0, 10, html_content)
     
-    return bytes(pdf.output(dest='S'))
+    return bytes(pdf.output())
     
