@@ -58,6 +58,8 @@ st.markdown(page_bg_img, unsafe_allow_html=True)
 with open(temp_file) as file:
     creds = json.load(file)
 
+delete_temp_credentials(temp_dir)
+
 authenticator = stauth.Authenticate(credentials=creds,
                                     cookie_name=st.secrets.cookie.name,
                                     cookie_key=st.secrets.cookie.key,
@@ -132,7 +134,7 @@ if st.session_state["authentication_status"]:
         }
 
         df_records = pd.concat([df_records, pd.DataFrame([new_record])], ignore_index=True)
-        df_records = df_records.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        df_records = df_records.apply(lambda x: x.upper() if isinstance(x, str) else x)
 
         conn.update(worksheet='Records', data=df_records)
         st.success('Record added 🔥')
@@ -142,8 +144,6 @@ if st.session_state["authentication_status"]:
 
         st.cache_data.clear()
     
-    delete_temp_credentials(temp_dir)
-
 elif st.session_state["authentication_status"] is False:
     st.error('Username/password is incorrect')
 
