@@ -68,6 +68,7 @@ st.title("Download Full Result PDF ")
 # Get the list of PDF files
 PDF_FOLDER = 'full_result'
 pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.lower().endswith('.pdf')]
+pdf_files.sort(key=lambda x: os.path.getmtime(os.path.join(PDF_FOLDER, x)), reverse=True)
 
 if not pdf_files:
     st.write("No PDF files found in the specified folder.")
