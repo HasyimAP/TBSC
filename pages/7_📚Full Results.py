@@ -6,6 +6,7 @@ import streamlit as st
 
 from pathlib import Path
 from PIL import Image
+from streamlit_gsheets import GSheetsConnection
 
 from utilities import exception_handler
 
@@ -64,11 +65,18 @@ background-color: rgba(197, 239, 247, 0.75);
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 st.title("Download Full Result PDF ")
-    
+
+conn = st.connection("gsheets", type=GSheetsConnection)
+df_competitions = conn.read(worksheet='Competitions').dropna(axis=1, how='all')
+
 # Get the list of PDF files
 PDF_FOLDER = 'full_result'
 pdf_files = [f for f in os.listdir(PDF_FOLDER) if f.lower().endswith('.pdf')]
-pdf_files.sort(key=lambda x: os.path.getmtime(os.path.join(PDF_FOLDER, x)), reverse=True)
+
+competition_to_pdf = {comp.upper(): pdf for pdf in pdf_files for comp in df_competitions['Competition'] if comp.upper() in pdf.upper()}
+
+# Sort the PDF files based on the order in df_competitions
+sorted_pdf_files = [competition_to_pdf[comp] for comp in df_competitions['Competition'] if comp.upper() in competition_to_pdf]
 
 if not pdf_files:
     st.write("No PDF files found in the specified folder.")
@@ -80,7 +88,7 @@ else:
     cols = st.columns(num_columns)
     
     # Iterate over PDF files and place download buttons in columns
-    for i, pdf_file in enumerate(pdf_files):
+    for i, pdf_file in enumerate(sorted_pdf_files):
         file_path = os.path.join(PDF_FOLDER, pdf_file)
         with open(file_path, "rb") as f:
             col_idx = i % num_columns  # Determine the column index
