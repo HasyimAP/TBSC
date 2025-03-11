@@ -370,6 +370,10 @@ for idx, row in df_records_comp.iterrows():
         df_records_comp.loc[idx, 'Performance'] = '🔥New Personal Best Time🔥'
         df_records_comp.loc[idx, 'Score'] = df_best_time.query('Event == @_event')['Score'].values[0]
         df_records_comp.loc[idx, 'Rank'] = df_best_time.query('Event == @_event')['Rank'].values[0]
+    elif _record == 'DQ':
+        df_records_comp.loc[idx, 'Performance'] = '🚫Disqualified🚫'
+    elif _record == 'DNS':
+        df_records_comp.loc[idx, 'Performance'] = '🚷Did Not Start🚷'
     else:
         _record_s = _record.split(':')
         _record_s = float(_record_s[0])*60 + float(_record_s[1])
