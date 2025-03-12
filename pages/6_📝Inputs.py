@@ -86,8 +86,8 @@ if st.session_state["authentication_status"]:
 
     conn = st.connection("gsheets", type=GSheetsConnection)
 
-    df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
-    df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+    df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all').dropna(axis=1, how='all')
+    df_records = conn.read(worksheet='Records').dropna(axis=0, how='all').dropna(axis=1, how='all')
 
     name = st.selectbox(
         'Athlete name:',
@@ -111,6 +111,11 @@ if st.session_state["authentication_status"]:
         'Competition:'
     )
 
+    level = st.radio(
+        'Level:',
+        options=['Internal', 'City/District', 'Province', 'National', 'Province - INV', 'National - INV', 'International']
+    )
+
     if not competition:
             competition = ''
 
@@ -130,7 +135,8 @@ if st.session_state["authentication_status"]:
             'Event': str(event).strip(),
             'Record': str(time).strip(),
             'Date': str(date).strip(),
-            'Competition': competition.upper().strip()
+            'Competition': competition.upper().strip(),
+            'Level': level.upper().strip()
         }
 
         df_records = pd.concat([df_records, pd.DataFrame([new_record])], ignore_index=True)
