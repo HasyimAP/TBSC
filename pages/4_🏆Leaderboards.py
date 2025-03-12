@@ -71,8 +71,7 @@ current_year = datetime.date.today().year
 
 # Load data
 current_year = datetime.date.today().year
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
-
+df_records = conn.read(worksheet='Records').dropna(axis=0, how='all').dropna(axis=1, how='all')
 df_athlete = conn.read(worksheet='Athlete').dropna(axis=0, how='all').dropna(axis=1, how='all')
 df_statistic = conn.read(worksheet='Statistic').dropna(axis=0, how='all').dropna(axis=1, how='all')
 

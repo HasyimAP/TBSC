@@ -55,11 +55,8 @@ st.title('Athletes List')
 # --- Get All Data ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all')
-df_athletes = df_athletes.dropna(axis=1, how='all')
-df_competitions = conn.read(worksheet='Competitions').dropna(axis=1, how='all')
-# df_records = conn.read(worksheet='Records', usecols=list(range(0,8)), ttl=5).dropna(axis=0, how='all')
-
+df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all').dropna(axis=1, how='all')
+df_competitions = conn.read(worksheet='Competitions').dropna(axis=0, how='all').dropna(axis=1, how='all')
 current_year = datetime.date.today().year
 
 # --- Total Current Athletes ---

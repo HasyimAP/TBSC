@@ -115,8 +115,8 @@ st.title('Pacing Charts')
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all').dropna(axis=1, how='all')
+df_records = conn.read(worksheet='Records').dropna(axis=0, how='all').dropna(axis=1, how='all')
 drop = ['DNS', 'DQ', 'NS', 'NSS']
 df_records = df_records[~df_records['Record'].isin(drop)]
 
