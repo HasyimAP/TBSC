@@ -54,8 +54,8 @@ st.title('Athlete Records')
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-df_athletes = conn.read(worksheet='Athlete', usecols=list(range(0,6))).dropna(axis=0, how='all')
-df_records = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_athletes = conn.read(worksheet='Athlete').dropna(axis=0, how='all').dropna(axis=1, how='all')
+df_records = conn.read(worksheet='Records').dropna(axis=0, how='all').dropna(axis=1, how='all')
 df_stats = conn.read(worksheet='Statistic').dropna(axis=0, how='all').dropna(axis=1, how='all')
 
 drop = ['DNS', 'DQ', 'NS', 'NSS']
@@ -213,7 +213,7 @@ for idx, row in df_best_time.iterrows():
         df_best_time.loc[idx, 'Score'] = None
         df_best_time.loc[idx, 'Rank'] = None
 
-df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Date', 'Score', 'Rank']]
+df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Level', 'Date', 'Score', 'Rank']]
 
 st.markdown("## Best Times")
 st.dataframe(df_best_time, hide_index=True, use_container_width=True)
@@ -345,7 +345,7 @@ with stroke2:
 # --- Competitions ---
 st.markdown("## Competitions")
 
-df_records_comp = conn.read(worksheet='Records', usecols=list(range(0,7))).dropna(axis=0, how='all')
+df_records_comp = conn.read(worksheet='Records').dropna(axis=0, how='all').dropna(axis=1, how='all')
 df_records_comp = df_records_comp.query('Name == @athlete').sort_values(['Date'], ascending=False)
 
 competition = st.selectbox(
@@ -354,7 +354,11 @@ competition = st.selectbox(
 )
 
 df_records_comp = df_records_comp.query('Competition == @competition')
-df_records_comp = df_records_comp.drop(columns=['Name', 'Sex', 'Year of Birth', 'Competition'])
+
+level = df_records_comp['Level'].unique()[0]
+st.markdown(f"Level: *{str(level).capitalize()}*")
+
+df_records_comp = df_records_comp.drop(columns=['Name', 'Sex', 'Year of Birth', 'Competition', 'Level'])
 
 df_records_comp['Performance'] = None 
 df_records_comp['Score'] = None 
@@ -392,7 +396,7 @@ for idx, row in df_records_comp.iterrows():
         else:
             _emot = '🔴'
 
-        df_records_comp.loc[idx, 'Performance'] = f'{diff} s ({diff_percent}%) Slower than PR {_emot}'
+        df_records_comp.loc[idx, 'Performance'] = f'{diff} s ({diff_percent}%) Slower than PB {_emot}'
     
         best_score = df_best_time.query('Event == @_event')['Score'].values[0]
         _score = (best_time_s / _record_s) * best_score
@@ -402,11 +406,15 @@ for idx, row in df_records_comp.iterrows():
 
 st.dataframe(df_records_comp, hide_index=True, use_container_width=True)
 
+
 #  AI Analysis
 st.markdown("## AI Analysis")
 
 if st.button('Analyze Athlete Stats'):
-    ai_analysis = analyze_athlete_stats(bio=athlete_data, stats=df_stats.to_dict(orient='records')[0])
+    ai_analysis = analyze_athlete_stats(
+        bio=athlete_data, 
+        stats=df_stats.to_dict(orient='records')[0]
+    )
     stats_json = json.loads(ai_analysis.text)
     with st.expander('View AI Analysis Result (SWOT Analysis)'):
         swot_analysis = (f"""
