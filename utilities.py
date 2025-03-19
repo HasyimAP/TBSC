@@ -102,8 +102,7 @@ def exception_handler(e):
     import sentry_sdk  # Needed because this is executed outside the current scope
     st.image(
         'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif'
-        'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif',
-        use_column_width=True
+        'Y2lkPTc5MGI3NjExNmVic2t4aWozOTFibjJ3eXNrbDZ4a2RjazRocGI1N3djbHVpOWQyeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UQVVaXJtC3LBLwHmTU/giphy.gif'
     )
     if sentry_sdk.is_initialized():
         st.error(
@@ -120,7 +119,7 @@ def create_watermark(pdf: FPDF):
         image = Image.open(watermark_image).convert("RGBA")
     
         alpha = image.split()[3]
-        alpha = alpha.point(lambda p: p * 0.2) 
+        alpha = alpha.point(lambda p: p * 0.1) 
         image.putalpha(alpha)
         
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
@@ -172,7 +171,7 @@ def markdown_to_pdf(markdown_content: str):
     
     # Add HTML content to PDF
     pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("helvetica", size=12)
     pdf.write_html(html_content)
     # pdf.multi_cell(0, 10, html_content)
     
