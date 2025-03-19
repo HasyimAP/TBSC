@@ -21,6 +21,19 @@ class AthleteSwot(BaseModel):
     short_term_goals: str = Field(..., description='Athlete short term goals. What should they aim to achieve in the next 6 months or in the minor competitions? Should be specific, measurable, achievable, relevant, and time-bound.')
     long_term_goals: str = Field(..., description='Athlete long term goals. What should they aim to achieve in the next 1 year or in the major competitions? Should be specific, measurable, achievable, relevant, and time-bound.')
 
+class CompetitionPerformance(BaseModel):
+    short_intro: str = Field(..., description='Short introduction about the athlete and their competition performance.')
+    strengths: str = Field(..., description='Athlete strength points in the current competition. What are they performing well at? What strokes or distances perform well?')
+    weaknesses: str = Field(..., description='Athlete weakness points in the current competition. What are they performing poorly at? What strokes or distances perform poorly?')
+    best_event: str = Field(..., description='On which event the athlete performs the best in the competition? Explain why.')
+    worst_event: str = Field(..., description='On which event the athlete performs the worst in the competition? Explain why.')
+    competition_level: str = Field(..., description='From the competition results, what is the athlete\'s current competition level? Is it suitable for the competition level they joined? Are they underperforming, performing as expected, or overperforming? Explain why.')
+    consistency_analysis: str = Field(..., description="How consistent is the athlete across all events in this competition? Are their performances close to their PBs, or do they vary significantly?")
+    fatigue_effect: str = Field(..., description="Did the athlete's performance decline in later events? How did fatigue or recovery impact results? Does the number of events affect their performance?")
+    improvement: str = Field(..., description='What can the athlete improve on to perform better in the next competition? Any other events they should focus or try on the next competition? If they can retry the same competition, what should they do differently?')
+    overall_performance: str = Field(..., description='Overall performance of the athlete in competitions. How well do they perform? Is it good, average, or bad? Explain why.')
+
+
 @st.cache_resource(ttl='1d')
 def analyze_athlete_stats(bio: str, stats: dict):
     prompt = f"""
@@ -42,6 +55,42 @@ def analyze_athlete_stats(bio: str, stats: dict):
         config=types.GenerateContentConfig(
             response_mime_type='application/json',
             response_schema=AthleteSwot,
+            temperature=0.2,
+            top_p=0.8,
+            top_k=40,
+        )
+    )
+
+    return response
+
+@st.cache_resource(ttl='1d')
+def analyze_competition_performance(bio: str, best_time: list[dict], competition: list[dict], level: str, notes: str = ''):
+    prompt = f"""
+    {st.secrets.gemini_llm.persona}
+    You are going to analyze the athlete's chosen competition performance based on their best times and competition results and determine their overall performance level.
+
+    Here is the athlete's bio that you will analyze:
+    {bio}
+
+    Here are the athlete's competition results that you will analyze:
+    {competition}
+
+    The competition level is: {level}
+
+    Here are the athlete's best times that you will use to compare on the competition performance:
+    {best_time}
+
+    Additional information from other coaches or from the athlete themselves: {notes}
+    """
+
+    client = genai.Client(api_key=st.secrets.gemini_llm.api_key)
+
+    response = client.models.generate_content(
+        model=st.secrets.gemini_llm.model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type='application/json',
+            response_schema=CompetitionPerformance,
             temperature=0.2,
             top_p=0.8,
             top_k=40,
