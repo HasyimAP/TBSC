@@ -10,7 +10,7 @@ import plotly.express as px
 from PIL import Image
 from pathlib import Path
 from datetime import timedelta
-from ai_analysis import analyze_athlete_stats
+from ai_analysis import analyze_athlete_stats, analyze_competition_performance
 from utilities import assign_rank, categorize_age, exception_handler, markdown_to_pdf
 from streamlit_gsheets import GSheetsConnection
 
@@ -218,6 +218,48 @@ df_best_time = df_best_time[['Event', 'Record', 'Competition', 'Level', 'Date', 
 st.markdown("## Best Times")
 st.dataframe(df_best_time, hide_index=True, use_container_width=True)
 
+if st.button('Analyze Athlete Stats'):
+    ai_analysis = analyze_athlete_stats(
+        bio=athlete_data, 
+        stats=df_stats.to_dict(orient='records')[0]
+    )
+    stats_json = json.loads(ai_analysis.text)
+    with st.expander('View AI Analysis Result (SWOT Analysis)'):
+        swot_analysis = (f"""
+#### Short Bio
+{stats_json['biodata']}
+
+#### Athlete Strengths, What are they good at?
+{stats_json['strengths']}
+
+#### Athlete Weaknesses, What are they bad at?
+{stats_json['weaknesses']}
+
+#### Specialization
+- **Best Stroke:** {stats_json['best_stroke']}
+- **Best Distance:** {stats_json['best_distance']}
+- **Weakest Stroke:** {stats_json['weakest_stroke']}
+- **Weakest Distance:** {stats_json['weakest_distance']}
+- **Should the athlete focus on medley events?** {stats_json['medley']}
+- **Should the athlete start specializing in a specific stroke or distance?** {stats_json['specialization']}
+
+#### Goals & Development Plan
+- **Development Plan:** {stats_json['development_plan']}
+- **Short Term Goals:** {stats_json['short_term_goals']}
+- **Long Term Goals:** {stats_json['long_term_goals']}
+""")
+
+        st.markdown(swot_analysis)
+
+        output_path = f'{athlete} SWOT Analysis.pdf'
+        swot_pdf_bytes = markdown_to_pdf(swot_analysis)
+        st.download_button(
+            label='Download SWOT Analysis PDF',
+            data=swot_pdf_bytes,
+            file_name=output_path,
+            mime='application/pdf'
+        )
+    
 # --- Track Records ---
 st.markdown("## Track Records")
 
@@ -406,56 +448,54 @@ for idx, row in df_records_comp.iterrows():
 
 st.dataframe(df_records_comp, hide_index=True, use_container_width=True)
 
-
-#  AI Analysis
-st.markdown("## AI Analysis")
-
-if st.button('Analyze Athlete Stats'):
-    ai_analysis = analyze_athlete_stats(
-        bio=athlete_data, 
-        stats=df_stats.to_dict(orient='records')[0]
+additional_info = st.text_area('Additional Information:', height=10)
+if st.button('Analyze Competition Performance'):
+    comp_performance = analyze_competition_performance(
+        bio=f'Name: {athlete}\n {athlete_data}', 
+        best_time=df_best_time.to_dict(orient='records'),
+        competition=df_records_comp.to_dict(orient='records'),
+        level=level.lower(),
+        notes=additional_info
     )
-    stats_json = json.loads(ai_analysis.text)
-    with st.expander('View AI Analysis Result (SWOT Analysis)'):
-        swot_analysis = (f"""
-#### Short Bio
-{stats_json['biodata']}
+    
+    comp_json = json.loads(comp_performance.text)
 
-#### Athlete Strengths, What are they good at?
-{stats_json['strengths']}
+    with st.expander('View Competition Analysis Result'):
+        comp_analysis = (f"""
+#### What are they performing well at?
+{comp_json['strengths']}
 
-#### Athlete Weaknesses, What are they bad at?
-{stats_json['weaknesses']}
+#### What are they performing poorly at?
+{comp_json['weaknesses']}
 
-#### Athlete Opportunities, What can they improve on?
-{stats_json['opportunities']}
+#### On which event the athlete performs the best in the competition?
+{comp_json['best_event']}
 
-#### Athlete Threats, What can hinder their performance?
-{stats_json['threats']}
+#### On which event the athlete performs the worst in the competition?
+{comp_json['worst_event']}
 
-#### Specialization
-- **Best Stroke:** {stats_json['best_stroke']}
-- **Best Distance:** {stats_json['best_distance']}
-- **Weakest Stroke:** {stats_json['weakest_stroke']}
-- **Weakest Distance:** {stats_json['weakest_distance']}
-- **Should the athlete focus on medley events?** {stats_json['medley']}
-- **Should the athlete start specializing in a specific stroke or distance?** {stats_json['specialization']}
+#### What is the athlete's current competition level?
+{comp_json['competition_level']}
 
-#### Goals & Development Plan
-- **Development Plan:** {stats_json['development_plan']}
-- **Short Term Goals:** {stats_json['short_term_goals']}
-- **Long Term Goals:** {stats_json['long_term_goals']}
+#### How consistent is the athlete across all events in this competition?
+{comp_json['consistency_analysis']}
+
+#### How did fatigue or recovery impact results?
+{comp_json['fatigue_effect']}
+
+#### What can the athlete improve on to perform better?
+{comp_json['improvement']}
+
+#### Overall performance of the athlete in competitions
+{comp_json['overall_performance']}
 """)
+        
+        st.markdown(comp_analysis)
 
-        st.markdown(swot_analysis)
-
-        output_path = f'{athlete} SWOT Analysis.pdf'
-        swot_pdf_bytes = markdown_to_pdf(swot_analysis)
         st.download_button(
-            label='Download SWOT Analysis PDF',
-            data=swot_pdf_bytes,
-            file_name=output_path,
+            label='Download Competition Analysis PDF',
+            data=markdown_to_pdf(comp_analysis),
+            file_name=f'{athlete} {competition} analysis.pdf',
             mime='application/pdf'
         )
-    
-    # st.write(json.loads(ai_analysis.text))
+
